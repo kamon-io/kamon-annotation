@@ -57,7 +57,7 @@ public @interface Count {
      * }
      * </pre>
      */
-    String name();
+    String name() default "";
 
     /**
      * Tags are a way of adding dimensions to metrics,
