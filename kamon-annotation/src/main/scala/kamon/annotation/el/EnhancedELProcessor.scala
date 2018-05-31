@@ -43,7 +43,7 @@ object EnhancedELProcessor {
       eval[java.util.HashMap[String, String]](s"{$str}") match {
         case Success(value) ⇒ value.asInstanceOf[java.util.HashMap[String, String]].asScala.toMap
         case Failure(cause) ⇒
-//          AnnotationExtension.log.error(s"${cause.getMessage} -> we will complete the operation with an empty map")
+          println(s"${cause.getMessage} -> we will complete the operation with an empty map")
           Map.empty[String, String]
       }
     } getOrElse Map.empty[String, String]

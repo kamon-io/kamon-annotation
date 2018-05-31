@@ -25,8 +25,8 @@ import kamon.context.Storage
 import kamon.trace.Span
 import kanela.agent.libs.net.bytebuddy.asm.Advice
 
-class TraceAnnotationAdvisor
-object TraceAnnotationAdvisor {
+class TraceAnnotationAdvisor3
+object TraceAnnotationAdvisor3 {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
   def startSpan(@Advice.This obj: Object,
                 @Advice.Origin method: Method,

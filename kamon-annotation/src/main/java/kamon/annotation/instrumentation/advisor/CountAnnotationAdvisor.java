@@ -35,7 +35,7 @@ public class CountAnnotationAdvisor {
         final Count countAnnotation = method.getAnnotation(Count.class);
         final String evaluatedString = StringEvaluator.evaluate(obj, countAnnotation.name());
         final String name = (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
-        Map<String, String> tags = TagsEvaluator.evaluate(obj, countAnnotation.tags());
+        final Map<String, String> tags = TagsEvaluator.evaluate(obj, countAnnotation.tags());
 
         System.out.println(Kamon.counter(name).refine(tags));
     }

@@ -41,7 +41,7 @@ import java.lang.annotation.*;
 public @interface RangeSampler {
 
     /**
-     * @return The MinMaxCounter's name.
+     * @return The RangeSampler's name.
      * <p>
      * Also, the Metric name can be resolved with an EL expression that evaluates to a String:
      * <p>
@@ -59,7 +59,7 @@ public @interface RangeSampler {
      * </pre>
      */
 
-    String name();
+    String name() default "";
 
     /**
      * Tags are a way of adding dimensions to metrics,
