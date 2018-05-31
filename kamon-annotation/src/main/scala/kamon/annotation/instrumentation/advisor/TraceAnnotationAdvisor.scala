@@ -28,17 +28,20 @@ import kanela.agent.libs.net.bytebuddy.asm.Advice
 class TraceAnnotationAdvisor
 object TraceAnnotationAdvisor {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
-  def startSpan(@Advice.Origin obj: Object,
+  def startSpan(@Advice.This obj: Object,
                 @Advice.Origin method: Method,
                 @Advice.Origin("#t") className: String,
                 @Advice.Origin("#m") methodName: String): (Storage.Scope, Span) = {
 
     val traceAnnotation = method.getAnnotation(classOf[Trace])
-    val operationName = if (traceAnnotation.operationName().nonEmpty) StringEvaluator(obj)(traceAnnotation.operationName()) else s"$className.$methodName"
-    val tags = TagsEvaluator(obj)(traceAnnotation.tags())
+    val operationName = if (traceAnnotation.operationName().nonEmpty) StringEvaluator.evaluate(obj)(traceAnnotation.operationName()) else s"$className.$methodName"
+    val tags = TagsEvaluator.evaluate(obj)(traceAnnotation.tags())
 
     val builder = Kamon.buildSpan(operationName)
     tags.foreach { case (key, value) => builder.withTag(key, value) }
+
+    println("OperationName " + operationName)
+    println("Tags " + tags)
 
     val span = builder.start()
     val scope = Kamon.storeContext(Kamon.currentContext().withKey(Span.ContextKey, span))

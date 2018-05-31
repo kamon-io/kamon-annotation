@@ -34,7 +34,7 @@ object EnhancedELProcessor {
       eval[String](str) match {
         case Success(value) ⇒ value
         case Failure(cause) ⇒
-//          AnnotationExtension.log.error(s"${cause.getMessage} -> we will complete the operation with 'unknown' string")
+          println(s"${cause.getMessage} -> we will complete the operation with 'unknown' string")
           "unknown"
       }
     } getOrElse expression

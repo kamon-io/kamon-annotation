@@ -16,6 +16,7 @@
 
 package kamon.annotation.instrumentation
 
+import java.util
 import java.util.concurrent.atomic.AtomicReferenceArray
 
 import kamon.annotation.el.ELProcessorFactory
@@ -157,26 +158,26 @@ import kamon.annotation.el.EnhancedELProcessor.Syntax
 //case class SegmentInfo(name: String, category: String, library: String, tags: Map[String, String])
 //case class TraceContextInfo(name: String, tags: Map[String, String])
 
-abstract class StringEvaluator(val processor: ELProcessor) extends (String ⇒ String)
+//abstract class StringEvaluator(val processor: ELProcessor) extends (String ⇒ String)
 
 object StringEvaluator {
-  def apply(obj: AnyRef) = new StringEvaluator(ELProcessorFactory.withObject(obj)) {
-    def apply(str: String) = processor.evalToString(str)
-  }
+  def evaluate(obj: AnyRef)(str:String): String =
+    ELProcessorFactory.withObject(obj).evalToString(str)
 
-  def apply(clazz: Class[_]) = new StringEvaluator(ELProcessorFactory.withClass(clazz)) {
-    def apply(str: String) = processor.evalToString(str)
-  }
+  def evaluate(clazz: Class[_])(str:String): String =
+    ELProcessorFactory.withClass(clazz).evalToString(str)
 }
 
-abstract class TagsEvaluator(val processor: ELProcessor) extends (String ⇒ Map[String, String])
-
 object TagsEvaluator {
-  def apply(obj: AnyRef) = new TagsEvaluator(ELProcessorFactory.withObject(obj)) {
-    def apply(str: String) = processor.evalToMap(str)
+  def evaluate(obj:AnyRef)(str:String): Map[String, String] =
+    ELProcessorFactory.withObject(obj).evalToMap(str)
+
+  def eval(obj:AnyRef)(str:String): util.Map[String, String] = {
+    import scala.collection.JavaConverters._
+    evaluate(obj)(str).asJava
   }
 
-  def apply(clazz: Class[_]) = new TagsEvaluator(ELProcessorFactory.withClass(clazz)) {
-    def apply(str: String) = processor.evalToMap(str)
-  }
+  def evaluate(clazz: Class[_])(str:String): Map[String, String] =
+    ELProcessorFactory.withClass(clazz).evalToMap(str)
+
 }
