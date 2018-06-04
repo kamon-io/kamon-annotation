@@ -38,6 +38,7 @@ public class TraceAnnotationAdvisor {
                                  @Advice.Local("scope") Storage.Scope scope) {
 
         final Trace traceAnnotation = method.getAnnotation(Trace.class);
+
         final String evaluatedString = StringEvaluator.evaluate(obj, traceAnnotation.operationName());
         final String operationName = (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
         final Map<String, String> tags = TagsEvaluator.eval(obj, traceAnnotation.tags());

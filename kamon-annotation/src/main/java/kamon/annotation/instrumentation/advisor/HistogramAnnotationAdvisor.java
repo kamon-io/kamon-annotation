@@ -17,33 +17,41 @@
 package kamon.annotation.instrumentation.advisor;
 
 import kamon.Kamon;
-import kamon.annotation.api.RangeSampler;
+import kamon.annotation.api.Histogram;
 import kamon.annotation.instrumentation.StringEvaluator;
 import kamon.annotation.instrumentation.TagsEvaluator;
+import kamon.metric.DynamicRange;
+import kamon.metric.HistogramMetric;
+import kamon.metric.MeasurementUnit;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
+import scala.Some;
 import scala.collection.immutable.Map;
 
 import java.lang.reflect.Method;
 
-public class RangeSamplerAnnotationAdvisor {
+public class HistogramAnnotationAdvisor {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void increment(@Advice.This Object obj,
-                                 @Advice.Origin Method method,
-                                 @Advice.Origin("#t") String className,
-                                 @Advice.Origin("#m") String methodName,
-                                 @Advice.Local("rangeSampler") kamon.metric.RangeSampler sampler) {
+    public static void create(@Advice.This Object obj,
+                              @Advice.Origin Method method,
+                              @Advice.Origin("#t") String className,
+                              @Advice.Origin("#m") String methodName,
+                              @Advice.Local("histogram") kamon.metric.HistogramMetric histogram) {
 
-        final RangeSampler rangeSamplerAnnotation = method.getAnnotation(RangeSampler.class);
-        final String evaluatedString = StringEvaluator.evaluate(obj, rangeSamplerAnnotation.name());
+        final Histogram histogramAnnotation = method.getAnnotation(Histogram.class);
+
+        final String evaluatedString = StringEvaluator.evaluate(obj, histogramAnnotation.name());
         final String name = (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
-        final Map<String, String> tags = TagsEvaluator.evaluate(obj, rangeSamplerAnnotation.tags());
+        final Map<String, String> tags = TagsEvaluator.evaluate(obj, histogramAnnotation.tags());
 
-        if(tags.isEmpty()) Kamon.rangeSampler(name).increment();
-        else Kamon.rangeSampler(name).refine(tags).increment();
+        histogram = Kamon.histogram(name, MeasurementUnit.none(), new Some<>(new DynamicRange(histogramAnnotation.lowestDiscernibleValue(), histogramAnnotation.highestTrackableValue(), histogramAnnotation.precision())));
+
+        if(tags.nonEmpty()) histogram = (HistogramMetric) histogram.refine(tags);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void decrement(@Advice.Local("rangeSampler") kamon.metric.RangeSampler sampler) {
-        sampler.decrement();
+    public static void record(@Advice.Local("histogram") kamon.metric.HistogramMetric histogram,
+                              @Advice.Return Object result) {
+
+        histogram.record(((Number)result).longValue());
     }
 }

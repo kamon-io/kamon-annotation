@@ -43,9 +43,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Time {
     /**
-     * @return The histogram's name.
+     * @return The timer's name.
      */
-    String name();
+    String name() default "";
 
     /**
      * Tags are a way of adding dimensions to metrics,

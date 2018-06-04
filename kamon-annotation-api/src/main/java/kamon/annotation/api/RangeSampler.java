@@ -31,7 +31,7 @@ import java.lang.annotation.*;
  * </code></pre>
  * <p>
  * <p>
- * A {@link kamon.metric.instrument.MinMaxCounter MinMaxCounter} for the defining method with the name {@code coolName} will be created and each time the
+ * A {@link kamon.metric.RangeSampler RangeSampler} for the defining method with the name {@code coolName} will be created and each time the
  * {@code #coolName(String)} method is invoked the counter is decremented when the method returns,
  * counting current invocations of the annotated method.
  */
@@ -47,7 +47,7 @@ public @interface RangeSampler {
      * <p>
      * <pre>
      * {@code
-     *  class MinMaxCounted  {
+     *  class RangeSampled  {
      *        private long id;
      *
      *        public long getId() { return id; }

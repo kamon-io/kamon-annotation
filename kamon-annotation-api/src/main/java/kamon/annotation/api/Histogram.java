@@ -57,7 +57,7 @@ public @interface Histogram {
      * }
      * </pre>
      */
-    String name();
+    String name() default "";
 
     /**
      * The lowest operationName that can be discerned (distinguished from 0) by the histogram.Must be a positive integer that
