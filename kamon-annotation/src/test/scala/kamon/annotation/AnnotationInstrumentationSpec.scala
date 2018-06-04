@@ -17,7 +17,7 @@
 //package kamon.annotation
 //
 //import com.typesafe.config.ConfigFactory
-//import kamon.annotation.api.{Count, EnableKamon, Histogram, RangeSampler, Segment, Time, Trace, _}
+//import kamon.annotation.api.{Count, EnableKamon, Histogram, RangeSampler, Segment, Timer, Trace, _}
 //import kamon.metric._
 //import kamon.testkit.BaseKamonSpec
 //import kamon.trace.SegmentCategory
@@ -97,14 +97,14 @@
 //      minMaxCounter2Snapshot.minMaxCounter("min-max-counter").get.sum should be(1)
 //    }
 //
-//    "measure the time spent in the execution of a method annotated with @Time" in {
+//    "measure the time spent in the execution of a method annotated with @Timer" in {
 //      for (id ← 1 to 1) Annotated(id).time()
 //
 //      val snapshot = takeSnapshotOf("time", "histogram")
 //      snapshot.histogram("histogram").get.numberOfMeasurements should be(1)
 //    }
 //
-//    "measure the time spent in the execution of a method annotated with @Time and evaluate EL expressions" in {
+//    "measure the time spent in the execution of a method annotated with @Timer and evaluate EL expressions" in {
 //      for (id ← 1 to 1) Annotated(id).timeWithEL()
 //
 //      val snapshot = takeSnapshotOf("time:1", "histogram", tags = Map("slow-service" -> "service", "env" -> "prod"))
@@ -167,10 +167,10 @@
 //  @RangeSampler(name = "#{'minMax:' += this.id}", tags = "#{'minMax':'1', 'env':'dev'}")
 //  def countMinMaxWithEL(): Unit = {}
 //
-//  @Time(name = "time")
+//  @Timer(name = "time")
 //  def time(): Unit = {}
 //
-//  @Time(name = "${'time:' += this.id}", tags = "${'slow-service':'service', 'env':'prod'}")
+//  @Timer(name = "${'time:' += this.id}", tags = "${'slow-service':'service', 'env':'prod'}")
 //  def timeWithEL(): Unit = {}
 //
 //  @Histogram(name = "histogram")

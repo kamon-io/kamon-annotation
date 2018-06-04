@@ -34,13 +34,13 @@ import javax.el.ELProcessor
 //import org.aspectj.lang.annotation.{Aspect, DeclareMixin}
 //import org.aspectj.lang.reflect.MethodSignature
 import kamon.annotation.el.EnhancedELProcessor.Syntax
-//import kamon.annotation.api.{Time, _}
+//import kamon.annotation.api.{Timer, _}
 //
 //class BaseAnnotationInstrumentation {
 //
 //  @inline final def registerTime(jps: JoinPoint.StaticPart, histograms: AtomicReferenceArray[instrument.Histogram], evalString: StringEvaluator, evalTags: TagsEvaluator): instrument.Histogram = {
 //    val method = jps.getSignature.asInstanceOf[MethodSignature].getMethod
-//    val time = method.getAnnotation(classOf[Time])
+//    val time = method.getAnnotation(classOf[Timer])
 //    val name = evalString(time.name())
 //    val tags = evalTags(time.tags())
 //    val currentHistogram = Kamon.metrics.histogram(name, tags)

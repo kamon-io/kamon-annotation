@@ -17,7 +17,7 @@
 package kamon.annotation.instrumentation.advisor;
 
 import kamon.Kamon;
-import kamon.annotation.api.Time;
+import kamon.annotation.api.Timer;
 import kamon.annotation.instrumentation.StringEvaluator;
 import kamon.annotation.instrumentation.TagsEvaluator;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
@@ -25,15 +25,15 @@ import scala.collection.immutable.Map;
 
 import java.lang.reflect.Method;
 
-public class TimeAnnotationAdvisor {
+public class TimerAnnotationAdvisor {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void start(@Advice.This Object obj,
-                                 @Advice.Origin Method method,
-                                 @Advice.Origin("#t") String className,
-                                 @Advice.Origin("#m") String methodName,
-                                 @Advice.Local("startedTimer") kamon.metric.StartedTimer timer) {
+                             @Advice.Origin Method method,
+                             @Advice.Origin("#t") String className,
+                             @Advice.Origin("#m") String methodName,
+                             @Advice.Local("startedTimer") kamon.metric.StartedTimer timer) {
 
-        final Time timeAnnotation = method.getAnnotation(Time.class);
+        final Timer timeAnnotation = method.getAnnotation(Timer.class);
 
         final String evaluatedString = StringEvaluator.evaluate(obj, timeAnnotation.name());
         final String name = (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;

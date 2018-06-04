@@ -51,7 +51,7 @@
 //    processSegment(segmentInfo, pjp)
 //  }
 //
-//  @Around("execution(@kamon.annotation.api.Time !static * (@kamon.annotation.api.EnableKamon AnnotationInstruments+).*(..)) && this(obj)")
+//  @Around("execution(@kamon.annotation.api.Timer !static * (@kamon.annotation.api.EnableKamon AnnotationInstruments+).*(..)) && this(obj)")
 //  def time(pjp: ProceedingJoinPoint, obj: AnnotationInstruments): AnyRef = {
 //    var histogram = obj.timeHistograms.get(pjp.getStaticPart.getId)
 //    if (histogram == null) histogram = registerTime(pjp.getStaticPart, obj.timeHistograms, StringEvaluator(obj), TagsEvaluator(obj))

@@ -94,14 +94,14 @@
 //      snapshot.minMaxCounter("min-max-counter").get.max should be(1)
 //    }
 //
-//    "measure the time spent in the execution of a static method annotated with @Time" in {
+//    "measure the time spent in the execution of a static method annotated with @Timer" in {
 //      for (id ← 1 to 1) AnnotatedJavaClass.time()
 //
 //      val snapshot = takeSnapshotOf("time", "histogram")
 //      snapshot.histogram("histogram").get.numberOfMeasurements should be(1)
 //    }
 //
-//    "measure the time spent in the execution of a static method annotated with @Time and evaluate EL expressions" in {
+//    "measure the time spent in the execution of a static method annotated with @Timer and evaluate EL expressions" in {
 //      for (id ← 1 to 1) AnnotatedJavaClass.timeWithEL()
 //
 //      val snapshot = takeSnapshotOf("time:10", "histogram", tags = Map("slow-service" -> "service", "env" -> "prod"))

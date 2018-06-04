@@ -38,9 +38,14 @@ public class AnnotationInstrumentation extends KanelaInstrumentation {
                     .withAdvisorFor(annotatedMethods, () -> RangeSamplerAnnotationAdvisor.class)
                     .build());
 
-        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Time", (builder, annotatedMethods) ->
+        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Gauge", (builder, annotatedMethods) ->
                 builder
-                    .withAdvisorFor(annotatedMethods, () -> TimeAnnotationAdvisor.class)
+                        .withAdvisorFor(annotatedMethods, () -> GaugeAnnotationAdvisor.class)
+                        .build());
+
+        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Timer", (builder, annotatedMethods) ->
+                builder
+                    .withAdvisorFor(annotatedMethods, () -> TimerAnnotationAdvisor.class)
                     .build());
 
         forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Histogram", (builder, annotatedMethods) ->

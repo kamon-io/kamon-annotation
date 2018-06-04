@@ -46,10 +46,10 @@
 //    @MinMaxCount(name = "#{'minMax:' += AnnotatedJavaClass.ID}", tags = "#{'minMax':'1', 'env':'dev'}")
 //    public static void countMinMaxWithEL() {}
 //
-//    @Time(name = "time")
+//    @Timer(name = "time")
 //    public static void time() {}
 //
-//    @Time(name = "${'time:' += AnnotatedJavaClass.ID}", tags = "${'slow-service':'service', 'env':'prod'}")
+//    @Timer(name = "${'time:' += AnnotatedJavaClass.ID}", tags = "${'slow-service':'service', 'env':'prod'}")
 //    public static void timeWithEL() {}
 //
 //    @Histogram(name = "histogram")

@@ -20,6 +20,7 @@ import kamon.Kamon;
 import kamon.annotation.api.RangeSampler;
 import kamon.annotation.instrumentation.StringEvaluator;
 import kamon.annotation.instrumentation.TagsEvaluator;
+import kamon.metric.RangeSamplerMetric;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
 import scala.collection.immutable.Map;
 
@@ -31,19 +32,20 @@ public class RangeSamplerAnnotationAdvisor {
                                  @Advice.Origin Method method,
                                  @Advice.Origin("#t") String className,
                                  @Advice.Origin("#m") String methodName,
-                                 @Advice.Local("rangeSampler") kamon.metric.RangeSampler sampler) {
+                                 @Advice.Local("rangeSampler") kamon.metric.RangeSamplerMetric sampler) {
 
         final RangeSampler rangeSamplerAnnotation = method.getAnnotation(RangeSampler.class);
         final String evaluatedString = StringEvaluator.evaluate(obj, rangeSamplerAnnotation.name());
         final String name = (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
         final Map<String, String> tags = TagsEvaluator.evaluate(obj, rangeSamplerAnnotation.tags());
 
-        if(tags.isEmpty()) Kamon.rangeSampler(name).increment();
-        else Kamon.rangeSampler(name).refine(tags).increment();
+        sampler = Kamon.rangeSampler(name);
+        if(tags.nonEmpty()) sampler = (RangeSamplerMetric) sampler.refine(tags);
+        sampler.increment();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void decrement(@Advice.Local("rangeSampler") kamon.metric.RangeSampler sampler) {
+    public static void decrement(@Advice.Local("rangeSampler") kamon.metric.RangeSamplerMetric sampler) {
         sampler.decrement();
     }
 }

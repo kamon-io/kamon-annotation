@@ -16,42 +16,54 @@
 
 package kamon.annotation.api;
 
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
+import java.lang.annotation.*;
 
 /**
- * A marker annotation to define a method as a timed.
+ * A marker annotation to define a method as a Gauge.
  * <p>
  * <p>
  * Given a method like this:
  * <pre><code>
- *     {@literal @}Timed(name = "coolName", tags="""${{'my-cool-tag':'my-cool-operationName'}}""")
- *     public String coolName(String name) {
- *         return "Hello " + name;
+ *     {@literal @}Gauge(name = "coolName", tags="${'my-cool-tag':'my-cool-operationName'}")
+ *     public (Long|Double|Float|Integer) coolName() {
+ *         return 100L;
  *     }
  * </code></pre>
  * <p>
  * <p>
- * A histogram for the defining method with the name {@code coolName} will be created and each time the
- * {@code #coolName(String)} method is invoked, the latency of execution will be recorded.
+ * A {@link kamon.metric.Gauge Gauge} for the defining method with the name {@code coolName} will be created and each time the
+ * {@code #coolName(String)} method is invoked, the gauge will be set the returned value.
  */
+@Documented
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Time {
+public @interface Gauge {
+
     /**
-     * @return The timer's name.
+     * @return The gauge's name.
+     * <p>
+     * Also, the Metric name can be resolved with an EL expression that evaluates to a String:
+     * <p>
+     * <pre>
+     * {@code
+     *  class Gauged  {
+     *        private long id;
+     *
+     *        public long getId() { return id; }
+     *
+     *        {@literal @}Gauge (name = "${'counterID:' += this.id}")
+     *        void gaugedMethod() {} // create a gauges with name => gaugeID:[id]
+     *    }
+     * }
+     * </pre>
      */
     String name() default "";
 
     /**
      * Tags are a way of adding dimensions to metrics,
-     * these are constructed using EL syntax e.g. """${{'algorithm':'1','env':'production'}}"""
+     * these are constructed using EL syntax e.g. "${'algorithm':'1','env':'production'}"
      *
-     * @return the tags associated to the histogram
+     * @return the tags associated to the counter
      */
     String tags() default "";
 }
