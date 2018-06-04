@@ -35,6 +35,7 @@ public class GaugeAnnotationAdvisor {
 
         final Gauge gaugeAnnotation = method.getAnnotation(Gauge.class);
 
+
         final String evaluatedString = StringEvaluator.evaluate(obj, gaugeAnnotation.name());
         final String name = (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
         final Map<String, String> tags = TagsEvaluator.eval(obj, gaugeAnnotation.tags());

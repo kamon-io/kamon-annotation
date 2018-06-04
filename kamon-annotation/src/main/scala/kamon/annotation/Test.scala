@@ -29,9 +29,14 @@ case class Hello(id:Long) {
 
 object AnnotatedObject {
   //
-  val Id = "10"
+  val Id = "1000"
 
   //
+  @Gauge(name="${'pepe:' += AnnotatedObject$.MODULE$.Id}", tags = "${'slow-service':'service', 'env':'prod'}")
   @Trace(operationName="trace")
-  def trace(): Unit = {}
+  def trace(): Long = {
+    100L
+  }
 }
+
+
