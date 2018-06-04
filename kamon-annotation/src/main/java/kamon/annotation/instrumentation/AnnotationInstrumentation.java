@@ -25,7 +25,10 @@ import static kanela.agent.libs.net.bytebuddy.matcher.ElementMatchers.returns;
 
 public class AnnotationInstrumentation extends KanelaInstrumentation {
 
-    private final ElementMatcher.Junction<MethodDescription> withReturnValues = returns(long.class).or(returns(double.class).or(returns(int.class).or(returns(float.class))));
+    private final ElementMatcher.Junction<MethodDescription> withReturnValues = returns(long.class)
+            .or(returns(double.class)
+            .or(returns(int.class)
+            .or(returns(float.class))));
 
     public AnnotationInstrumentation() {
         forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Trace", (builder, annotatedMethods) ->
