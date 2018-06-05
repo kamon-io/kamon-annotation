@@ -14,12 +14,12 @@
  * =========================================================================================
  */
 
-package kamon.annotation.instrumentation.advisor;
+package kamon.annotation.instrumentation.cache;
 
 import joptsimple.internal.Strings;
 import kamon.Kamon;
-import kamon.annotation.instrumentation.StringEvaluator;
-import kamon.annotation.instrumentation.TagsEvaluator;
+import kamon.annotation.el.StringEvaluator;
+import kamon.annotation.el.TagsEvaluator;
 import kamon.metric.*;
 import kamon.trace.Tracer;
 import scala.Some;
@@ -92,7 +92,7 @@ public class AnnotationCache {
     }
 
     public static Tracer.SpanBuilder getSpanBuilder(Method method, Object obj, String className, String methodName) {
-        return (Tracer.SpanBuilder) metrics.computeIfAbsent(getKey("Span", method), (key) -> {
+        return (Tracer.SpanBuilder) metrics.computeIfAbsent(getKey("Trace", method), (key) -> {
             final kamon.annotation.api.Trace traceAnnotation = method.getAnnotation(kamon.annotation.api.Trace.class);
             final String operationName = getOperationName(traceAnnotation.operationName(), obj, className, methodName);
             final Map<String, String> tags = TagsEvaluator.eval(obj, traceAnnotation.tags());
@@ -114,8 +114,6 @@ public class AnnotationCache {
         final String parameterTypes = Strings.join(Arrays.stream(method.getParameterTypes()).map(Class::toString).collect(Collectors.toList()), ":");
         final String returnType = method.getReturnType().toString();
 
-        String s = prefix + "|" + methodName + "|" + parameterCount + "|" + parameterTypes + "|" + returnType;
-        System.out.println(s);
-        return s;
+        return prefix + "|" + methodName + "|" + parameterCount + "|" + parameterTypes + "|" + returnType;
     }
 }

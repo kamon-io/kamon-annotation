@@ -14,23 +14,29 @@
  * =========================================================================================
  */
 
-package kamon.annotation.instrumentation.advisor;
+package kamon.annotation.el
 
-import kamon.annotation.instrumentation.cache.AnnotationCache;
-import kamon.metric.Gauge;
-import kanela.agent.libs.net.bytebuddy.asm.Advice;
+import java.util
 
-import java.lang.reflect.Method;
+import kamon.annotation.el.EnhancedELProcessor.Syntax
 
-public class GaugeAnnotationAdvisor extends AnnotationCache {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void set(@Advice.This Object obj,
-                           @Advice.Origin Method method,
-                           @Advice.Origin("#t") String className,
-                           @Advice.Origin("#m") String methodName,
-                           @Advice.Return Object result) {
+object StringEvaluator {
+  def evaluate(obj: AnyRef)(str:String): String =
+    ELProcessorFactory.withObject(obj).evalToString(str)
 
-        final Gauge gauge = AnnotationCache.getGauge(method, obj, className, methodName);
-        gauge.set(((Number) result).longValue());
-    }
+  def evaluate(clazz: Class[_])(str:String): String =
+    ELProcessorFactory.withClass(clazz).evalToString(str)
+}
+
+object TagsEvaluator {
+  def evaluate(obj:AnyRef)(str:String): Map[String, String] =
+    ELProcessorFactory.withObject(obj).evalToMap(str)
+
+  def eval(obj:AnyRef)(str:String): util.Map[String, String] = {
+    import scala.collection.JavaConverters._
+    evaluate(obj)(str).asJava
+  }
+
+  def evaluate(clazz: Class[_])(str:String): Map[String, String] =
+    ELProcessorFactory.withClass(clazz).evalToMap(str)
 }

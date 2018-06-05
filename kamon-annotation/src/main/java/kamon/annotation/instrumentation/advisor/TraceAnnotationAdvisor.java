@@ -17,6 +17,7 @@
 package kamon.annotation.instrumentation.advisor;
 
 import kamon.Kamon;
+import kamon.annotation.instrumentation.cache.AnnotationCache;
 import kamon.context.Storage;
 import kamon.trace.Span;
 import kamon.trace.Tracer;
@@ -38,7 +39,7 @@ public class TraceAnnotationAdvisor {
         scope = Kamon.storeContext(Kamon.currentContext().withKey(Span.ContextKey(), span));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(@Advice.Local("span") Span span,
                                 @Advice.Local("scope") Storage.Scope scope,
                                 @Advice.Thrown Throwable throwable) {

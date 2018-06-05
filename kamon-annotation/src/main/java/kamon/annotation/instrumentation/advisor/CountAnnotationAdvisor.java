@@ -16,6 +16,7 @@
 
 package kamon.annotation.instrumentation.advisor;
 
+import kamon.annotation.instrumentation.cache.AnnotationCache;
 import kamon.metric.Counter;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
