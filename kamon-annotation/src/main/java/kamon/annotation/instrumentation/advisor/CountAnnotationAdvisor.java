@@ -16,12 +16,8 @@
 
 package kamon.annotation.instrumentation.advisor;
 
-import kamon.Kamon;
-import kamon.annotation.api.Count;
-import kamon.annotation.instrumentation.StringEvaluator;
-import kamon.annotation.instrumentation.TagsEvaluator;
+import kamon.metric.Counter;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
-import scala.collection.immutable.Map;
 
 import java.lang.reflect.Method;
 
@@ -32,13 +28,7 @@ public class CountAnnotationAdvisor {
                              @Advice.Origin("#t") String className,
                              @Advice.Origin("#m") String methodName) {
 
-        final Count countAnnotation = method.getAnnotation(Count.class);
-
-        final String evaluatedString = StringEvaluator.evaluate(obj, countAnnotation.name());
-        final String name = (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
-        final Map<String, String> tags = TagsEvaluator.evaluate(obj, countAnnotation.tags());
-
-        if(tags.isEmpty()) Kamon.counter(name).increment();
-        else Kamon.counter(name).refine(tags).increment();
+        final Counter counter = AnnotationCache.getCounter(method, obj, className, methodName);
+        counter.increment();
     }
 }

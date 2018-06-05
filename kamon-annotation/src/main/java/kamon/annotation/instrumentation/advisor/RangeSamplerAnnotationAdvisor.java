@@ -16,13 +16,8 @@
 
 package kamon.annotation.instrumentation.advisor;
 
-import kamon.Kamon;
-import kamon.annotation.api.RangeSampler;
-import kamon.annotation.instrumentation.StringEvaluator;
-import kamon.annotation.instrumentation.TagsEvaluator;
-import kamon.metric.RangeSamplerMetric;
+import kamon.metric.RangeSampler;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
-import scala.collection.immutable.Map;
 
 import java.lang.reflect.Method;
 
@@ -32,20 +27,15 @@ public class RangeSamplerAnnotationAdvisor {
                                  @Advice.Origin Method method,
                                  @Advice.Origin("#t") String className,
                                  @Advice.Origin("#m") String methodName,
-                                 @Advice.Local("rangeSampler") kamon.metric.RangeSamplerMetric sampler) {
+                                 @Advice.Local("rangeSampler") kamon.metric.RangeSampler sampler) {
 
-        final RangeSampler rangeSamplerAnnotation = method.getAnnotation(RangeSampler.class);
-        final String evaluatedString = StringEvaluator.evaluate(obj, rangeSamplerAnnotation.name());
-        final String name = (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
-        final Map<String, String> tags = TagsEvaluator.evaluate(obj, rangeSamplerAnnotation.tags());
-
-        sampler = Kamon.rangeSampler(name);
-        if(tags.nonEmpty()) sampler = (RangeSamplerMetric) sampler.refine(tags);
-        sampler.increment();
+        final RangeSampler rangeSampler = AnnotationCache.getRangeSampler(method, obj, className, methodName);
+        rangeSampler.increment();
+        sampler = rangeSampler;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void decrement(@Advice.Local("rangeSampler") kamon.metric.RangeSamplerMetric sampler) {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void decrement(@Advice.Local("rangeSampler") kamon.metric.RangeSampler sampler) {
         sampler.decrement();
     }
 }

@@ -18,18 +18,8 @@ package kamon.annotation.instrumentation;
 
 import kamon.annotation.instrumentation.advisor.*;
 import kanela.agent.api.instrumentation.KanelaInstrumentation;
-import kanela.agent.libs.net.bytebuddy.description.method.MethodDescription;
-import kanela.agent.libs.net.bytebuddy.matcher.ElementMatcher;
-
-import static kanela.agent.libs.net.bytebuddy.matcher.ElementMatchers.returns;
 
 public class AnnotationInstrumentation extends KanelaInstrumentation {
-
-    private final ElementMatcher.Junction<MethodDescription> withReturnValues = returns(long.class)
-            .or(returns(double.class)
-            .or(returns(int.class)
-            .or(returns(float.class))));
-
     public AnnotationInstrumentation() {
         forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Trace", (builder, annotatedMethods) ->
                 builder
@@ -46,7 +36,6 @@ public class AnnotationInstrumentation extends KanelaInstrumentation {
                     .withAdvisorFor(annotatedMethods, () -> RangeSamplerAnnotationAdvisor.class)
                     .build());
 
-
         forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Timer", (builder, annotatedMethods) ->
                 builder
                     .withAdvisorFor(annotatedMethods, () -> TimerAnnotationAdvisor.class)
@@ -54,12 +43,12 @@ public class AnnotationInstrumentation extends KanelaInstrumentation {
 
         forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Histogram", (builder, annotatedMethods) ->
                 builder
-                    .withAdvisorFor(annotatedMethods.and(withReturnValues), () -> HistogramAnnotationAdvisor.class)
+                    .withAdvisorFor(annotatedMethods.and(withReturnTypes(long.class, double.class, int.class, float.class)), () -> HistogramAnnotationAdvisor.class)
                     .build());
 
         forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Gauge", (builder, annotatedMethods) ->
                 builder
-                    .withAdvisorFor(annotatedMethods.and(withReturnValues), () -> GaugeAnnotationAdvisor.class)
+                    .withAdvisorFor(annotatedMethods.and(withReturnTypes(long.class, double.class, int.class, float.class)), () -> GaugeAnnotationAdvisor.class)
                     .build());
     }
 }
