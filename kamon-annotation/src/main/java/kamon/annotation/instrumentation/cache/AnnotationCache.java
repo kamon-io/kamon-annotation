@@ -34,7 +34,7 @@ public class AnnotationCache {
     private final static Map<String, Object> metrics = new ConcurrentHashMap<>();
 
     public static Gauge getGauge(Method method, Object obj, String className, String methodName) {
-        return (Gauge) metrics.computeIfAbsent(getKey("Gauge", method), (key) -> {
+        return (Gauge) metrics.computeIfAbsent(getKey("Gauge", method, obj), (key) -> {
             final kamon.annotation.api.Gauge gaugeAnnotation = method.getAnnotation(kamon.annotation.api.Gauge.class);
             final String name = getOperationName(gaugeAnnotation.name(), obj, className, methodName);
             final Map<String, String> tags = TagsEvaluator.eval(obj, gaugeAnnotation.tags());
@@ -45,7 +45,7 @@ public class AnnotationCache {
     }
 
     public static Counter getCounter(Method method, Object obj, String className, String methodName) {
-        return (Counter) metrics.computeIfAbsent(getKey("Counter", method), (key) -> {
+        return (Counter) metrics.computeIfAbsent(getKey("Counter", method, obj), (key) -> {
             final kamon.annotation.api.Count countAnnotation = method.getAnnotation(kamon.annotation.api.Count.class);
             final String name = getOperationName(countAnnotation.name(), obj, className, methodName);
             final Map<String, String> tags = TagsEvaluator.eval(obj, countAnnotation.tags());
@@ -57,7 +57,7 @@ public class AnnotationCache {
 
 
     public static Histogram getHistogram(Method method, Object obj, String className, String methodName) {
-        return (Histogram) metrics.computeIfAbsent(getKey("Histogram", method), (key) -> {
+        return (Histogram) metrics.computeIfAbsent(getKey("Histogram", method, obj), (key) -> {
             final kamon.annotation.api.Histogram histogramAnnotation = method.getAnnotation(kamon.annotation.api.Histogram.class);
             final String name = getOperationName(histogramAnnotation.name(), obj, className, methodName);
             final Map<String, String> tags = TagsEvaluator.eval(obj, histogramAnnotation.tags());
@@ -70,7 +70,7 @@ public class AnnotationCache {
     }
 
     public static RangeSampler getRangeSampler(Method method, Object obj, String className, String methodName) {
-        return (RangeSampler) metrics.computeIfAbsent(getKey("Sampler", method), (key) -> {
+        return (RangeSampler) metrics.computeIfAbsent(getKey("Sampler", method, obj), (key) -> {
             final kamon.annotation.api.RangeSampler rangeSamplerAnnotation = method.getAnnotation(kamon.annotation.api.RangeSampler.class);
             final String name = getOperationName(rangeSamplerAnnotation.name(), obj, className, methodName);
             final Map<String, String> tags = TagsEvaluator.eval(obj, rangeSamplerAnnotation.tags());
@@ -81,7 +81,7 @@ public class AnnotationCache {
     }
 
     public static Timer getTimer(Method method, Object obj, String className, String methodName) {
-        return (Timer) metrics.computeIfAbsent(getKey("Timer", method), (key) -> {
+        return (Timer) metrics.computeIfAbsent(getKey("Timer", method, obj), (key) -> {
             final kamon.annotation.api.Timer timeAnnotation = method.getAnnotation(kamon.annotation.api.Timer.class);
             final String name = getOperationName(timeAnnotation.name(), obj, className, methodName);
             final Map<String, String> tags = TagsEvaluator.eval(obj, timeAnnotation.tags());
@@ -92,7 +92,7 @@ public class AnnotationCache {
     }
 
     public static Tracer.SpanBuilder getSpanBuilder(Method method, Object obj, String className, String methodName) {
-        return (Tracer.SpanBuilder) metrics.computeIfAbsent(getKey("Trace", method), (key) -> {
+        return (Tracer.SpanBuilder) metrics.computeIfAbsent(getKey("Trace", method, obj), (key) -> {
             final kamon.annotation.api.Trace traceAnnotation = method.getAnnotation(kamon.annotation.api.Trace.class);
             final String operationName = getOperationName(traceAnnotation.operationName(), obj, className, methodName);
             final Map<String, String> tags = TagsEvaluator.eval(obj, traceAnnotation.tags());
@@ -108,12 +108,12 @@ public class AnnotationCache {
         return (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
     }
 
-    private static String getKey(String prefix, Method method) {
+    private static String getKey(String prefix, Method method, Object obj) {
         final String methodName = method.getName();
         final String parameterCount = String.valueOf(method.getParameterCount());
         final String parameterTypes = Strings.join(Arrays.stream(method.getParameterTypes()).map(Class::toString).collect(Collectors.toList()), ":");
         final String returnType = method.getReturnType().toString();
 
-        return prefix + "|" + methodName + "|" + parameterCount + "|" + parameterTypes + "|" + returnType;
+        return prefix + "|" + obj.hashCode() + "|" + methodName + "|" + parameterCount + "|" + parameterTypes + "|" + returnType;
     }
 }

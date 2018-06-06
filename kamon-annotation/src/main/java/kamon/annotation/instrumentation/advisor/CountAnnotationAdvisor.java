@@ -23,7 +23,7 @@ import kanela.agent.libs.net.bytebuddy.asm.Advice;
 import java.lang.reflect.Method;
 
 public class CountAnnotationAdvisor {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline =false)
     public static void count(@Advice.This Object obj,
                              @Advice.Origin Method method,
                              @Advice.Origin("#t") String className,
