@@ -16,7 +16,7 @@
 
 package kamon.annotation
 
-import kamon.{Kamon, SpanReporter}
+import kamon.Kamon
 import kamon.annotation.api._
 import kamon.metric.{Histogram => _, RangeSampler => _, Timer => _, _}
 import kamon.testkit.{MetricInspection, Reconfigure, TestSpanReporter}
@@ -48,11 +48,6 @@ class AnnotationInstrumentationSpec extends WordSpec
         spanTags("slow-service") shouldBe "service"
         spanTags("env") shouldBe "prod"
       }
-
-//      for (id ← 1 to 10) Annotated(id).trace()
-
-//      val snapshot = takeSnapshotOf("trace", "trace")
-//      snapshot.histogram("elapsed-time").get.numberOfMeasurements should be(10)
     }
 
     "count the invocations of a method annotated with @Count" in {

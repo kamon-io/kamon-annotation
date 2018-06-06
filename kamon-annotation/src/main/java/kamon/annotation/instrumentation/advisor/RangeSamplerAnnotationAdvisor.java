@@ -24,13 +24,14 @@ import java.lang.reflect.Method;
 
 public class RangeSamplerAnnotationAdvisor {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void increment(@Advice.This Object obj,
+    public static void increment(@Advice.This(optional = true) Object obj,
+                                 @Advice.Origin Class<?> clazz,
                                  @Advice.Origin Method method,
                                  @Advice.Origin("#t") String className,
                                  @Advice.Origin("#m") String methodName,
                                  @Advice.Local("rangeSampler") kamon.metric.RangeSampler sampler) {
 
-        final RangeSampler rangeSampler = AnnotationCache.getRangeSampler(method, obj, className, methodName);
+        final RangeSampler rangeSampler = AnnotationCache.getRangeSampler(method, obj, clazz, className, methodName);
         rangeSampler.increment();
         sampler = rangeSampler;
     }

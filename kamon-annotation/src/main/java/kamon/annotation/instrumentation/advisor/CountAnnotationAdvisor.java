@@ -24,12 +24,13 @@ import java.lang.reflect.Method;
 
 public class CountAnnotationAdvisor {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline =false)
-    public static void count(@Advice.This Object obj,
+    public static void count(@Advice.This(optional = true) Object obj,
+                             @Advice.Origin Class<?> clazz,
                              @Advice.Origin Method method,
                              @Advice.Origin("#t") String className,
                              @Advice.Origin("#m") String methodName) {
 
-        final Counter counter = AnnotationCache.getCounter(method, obj, className, methodName);
+        final Counter counter = AnnotationCache.getCounter(method, obj, clazz, className, methodName);
         counter.increment();
     }
 }

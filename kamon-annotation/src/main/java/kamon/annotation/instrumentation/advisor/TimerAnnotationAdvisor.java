@@ -24,13 +24,14 @@ import java.lang.reflect.Method;
 
 public class TimerAnnotationAdvisor {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void start(@Advice.This Object obj,
+    public static void start(@Advice.This(optional = true) Object obj,
+                             @Advice.Origin Class<?> clazz,
                              @Advice.Origin Method method,
                              @Advice.Origin("#t") String className,
                              @Advice.Origin("#m") String methodName,
                              @Advice.Local("startedTimer") kamon.metric.StartedTimer startedTimer) {
 
-        final Timer timer = AnnotationCache.getTimer(method, obj, className, methodName);
+        final Timer timer = AnnotationCache.getTimer(method, obj, clazz, className, methodName);
         startedTimer = timer.start();
     }
 

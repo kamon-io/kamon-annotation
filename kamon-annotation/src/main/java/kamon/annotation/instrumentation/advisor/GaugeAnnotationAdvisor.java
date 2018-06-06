@@ -24,13 +24,14 @@ import java.lang.reflect.Method;
 
 public class GaugeAnnotationAdvisor extends AnnotationCache {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void set(@Advice.This Object obj,
+    public static void set(@Advice.This(optional = true) Object obj,
+                           @Advice.Origin Class<?> clazz,
                            @Advice.Origin Method method,
                            @Advice.Origin("#t") String className,
                            @Advice.Origin("#m") String methodName,
                            @Advice.Return Object result) {
 
-        final Gauge gauge = AnnotationCache.getGauge(method, obj, className, methodName);
+        final Gauge gauge = AnnotationCache.getGauge(method, obj, clazz, className, methodName);
         gauge.set(((Number) result).longValue());
     }
 }

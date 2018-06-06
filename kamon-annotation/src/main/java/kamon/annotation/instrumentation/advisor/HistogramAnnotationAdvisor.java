@@ -24,13 +24,14 @@ import java.lang.reflect.Method;
 
 public class HistogramAnnotationAdvisor {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void record(@Advice.This Object obj,
+    public static void record(@Advice.This(optional = true) Object obj,
+                              @Advice.Origin Class<?> clazz,
                               @Advice.Origin Method method,
                               @Advice.Origin("#t") String className,
                               @Advice.Origin("#m") String methodName,
                               @Advice.Return Object result) {
 
-        final Histogram histogram = AnnotationCache.getHistogram(method, obj, className, methodName);
+        final Histogram histogram = AnnotationCache.getHistogram(method, obj, clazz, className, methodName);
         histogram.record(((Number)result).longValue());
     }
 }

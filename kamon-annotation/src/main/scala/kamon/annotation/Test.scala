@@ -12,7 +12,7 @@ object Test extends App {
   hello.hello()
   hello.hello()
   hello.hello()
-  AnnotatedObject.trace()
+//  AnnotatedObject.trace()
 }
 
 case class Hello(id:Long) {
@@ -31,19 +31,19 @@ case class Hello(id:Long) {
     println("HEEEEEELOOOOOOOOO")
     100
   }
-}
 
 
-object AnnotatedObject {
+
+//object AnnotatedObject {
+
+//  val Id = "1000"
+
   //
-  val Id = "1000"
-
-  //
-  @Gauge(name="${'pepe:' += AnnotatedObject$.MODULE$.Id}", tags = "${'slow-service':'service', 'env':'prod'}")
-  @Trace(operationName="trace")
-  def trace(): Long = {
-    100L
-  }
+//  @Gauge(name="${'pepe:' += AnnotatedObject$.MODULE$.Id}", tags = "${'slow-service':'service', 'env':'prod'}")
+//  @Trace(operationName="trace")
+//  def trace(): Long = {
+//    100L
+//  }
 }
 
 

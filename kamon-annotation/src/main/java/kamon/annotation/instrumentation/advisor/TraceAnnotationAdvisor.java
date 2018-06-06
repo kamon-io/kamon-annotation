@@ -27,14 +27,15 @@ import java.lang.reflect.Method;
 
 public class TraceAnnotationAdvisor {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void startSpan(@Advice.This Object obj,
+    public static void startSpan(@Advice.This(optional = true) Object obj,
+                                 @Advice.Origin Class<?> clazz,
                                  @Advice.Origin Method method,
                                  @Advice.Origin("#t") String className,
                                  @Advice.Origin("#m") String methodName,
                                  @Advice.Local("span") Span span,
                                  @Advice.Local("scope") Storage.Scope scope) {
 
-        final Tracer.SpanBuilder builder = AnnotationCache.getSpanBuilder(method, obj, className, methodName);
+        final Tracer.SpanBuilder builder = AnnotationCache.getSpanBuilder(method, obj, clazz, className, methodName);
         span = builder.start();
         scope = Kamon.storeContext(Kamon.currentContext().withKey(Span.ContextKey(), span));
     }
