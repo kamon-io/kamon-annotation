@@ -34,7 +34,7 @@ public class TimerAnnotationAdvisor {
         startedTimer = timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void end(@Advice.Local("startedTimer") kamon.metric.StartedTimer startedTimer) {
         startedTimer.stop();
     }

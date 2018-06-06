@@ -16,10 +16,9 @@
 
 package kamon.annotation.el
 
-import javax.el.ELProcessor
+import shaded.javax.el.ELProcessor
 
-
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
  * Pimp ELProcessor injecting some useful methods.

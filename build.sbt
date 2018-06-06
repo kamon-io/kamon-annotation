@@ -15,7 +15,7 @@
 
 val kamonCore       = "io.kamon"      %% "kamon-core"     % "1.1.2"
 val kamonTestkit    = "io.kamon"      %% "kamon-testkit"  % "1.1.2"
-val el              = "org.glassfish" %  "javax.el"      % "3.0.0"
+//val el              = "org.glassfish" %  "javax.el"      % "3.0.0"
 
 lazy val root = (project in file("."))
   .settings(noPublishing: _*)
@@ -40,6 +40,6 @@ lazy val annotation = (project in file("kamon-annotation"))
   .settings(javaAgents += "io.kamon"  % "kanela-agent"  % "0.0.300"  % "compile;test")
   .settings(
       libraryDependencies ++=
-        compileScope(kamonCore, el) ++
+        compileScope(kamonCore) ++
           testScope(scalatest, logbackClassic, kamonTestkit)
   ).dependsOn(annotationApi)
