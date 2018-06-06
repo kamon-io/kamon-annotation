@@ -16,7 +16,6 @@
 
 package kamon.annotation.instrumentation.cache;
 
-import joptsimple.internal.Strings;
 import kamon.Kamon;
 import kamon.annotation.el.StringEvaluator;
 import kamon.annotation.el.TagsEvaluator;
@@ -25,16 +24,15 @@ import kamon.trace.Tracer;
 import scala.Some;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class AnnotationCache {
-    private final static Map<String, Object> metrics = new ConcurrentHashMap<>();
+    private final static Map<MetricKey, Object> metrics = new ConcurrentHashMap<>();
 
     public static Gauge getGauge(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Gauge) metrics.computeIfAbsent(getKey("Gauge", method, obj, clazz), (key) -> {
+        return (Gauge) metrics.computeIfAbsent(MetricKey.from("Gauge", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Gauge gaugeAnnotation = method.getAnnotation(kamon.annotation.api.Gauge.class);
             final String name = getOperationName(gaugeAnnotation.name(), obj, clazz, className, methodName);
             final Map<String, String> tags = getTags(obj, clazz, gaugeAnnotation.tags());
@@ -45,7 +43,7 @@ public class AnnotationCache {
     }
 
     public static Counter getCounter(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Counter) metrics.computeIfAbsent(getKey("Counter", method, obj, clazz), (key) -> {
+        return (Counter) metrics.computeIfAbsent(MetricKey.from("Counter", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Count countAnnotation = method.getAnnotation(kamon.annotation.api.Count.class);
             final String name = getOperationName(countAnnotation.name(), obj, clazz, className, methodName);
             final Map<String, String> tags = getTags(obj, clazz, countAnnotation.tags());
@@ -57,7 +55,7 @@ public class AnnotationCache {
 
 
     public static Histogram getHistogram(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Histogram) metrics.computeIfAbsent(getKey("Histogram", method, obj, clazz), (key) -> {
+        return (Histogram) metrics.computeIfAbsent(MetricKey.from("Histogram", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Histogram histogramAnnotation = method.getAnnotation(kamon.annotation.api.Histogram.class);
             final String name = getOperationName(histogramAnnotation.name(), obj, clazz, className, methodName);
             final Map<String, String> tags = getTags(obj, clazz, histogramAnnotation.tags());
@@ -70,7 +68,7 @@ public class AnnotationCache {
     }
 
     public static RangeSampler getRangeSampler(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (RangeSampler) metrics.computeIfAbsent(getKey("Sampler", method, obj, clazz), (key) -> {
+        return (RangeSampler) metrics.computeIfAbsent(MetricKey.from("Sampler", method, obj, clazz), (key) -> {
             final kamon.annotation.api.RangeSampler rangeSamplerAnnotation = method.getAnnotation(kamon.annotation.api.RangeSampler.class);
             final String name = getOperationName(rangeSamplerAnnotation.name(), obj, clazz, className, methodName);
             final Map<String, String> tags = getTags(obj, clazz, rangeSamplerAnnotation.tags());
@@ -81,7 +79,7 @@ public class AnnotationCache {
     }
 
     public static Timer getTimer(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Timer) metrics.computeIfAbsent(getKey("Timer", method, obj, clazz), (key) -> {
+        return (Timer) metrics.computeIfAbsent(MetricKey.from("Timer", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Timer timeAnnotation = method.getAnnotation(kamon.annotation.api.Timer.class);
             final String name = getOperationName(timeAnnotation.name(), obj, clazz, className, methodName);
             final Map<String, String> tags = getTags(obj, clazz, timeAnnotation.tags());
@@ -92,7 +90,7 @@ public class AnnotationCache {
     }
 
     public static Tracer.SpanBuilder getSpanBuilder(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Tracer.SpanBuilder) metrics.computeIfAbsent(getKey("Trace", method, obj, clazz), (key) -> {
+        return (Tracer.SpanBuilder) metrics.computeIfAbsent(MetricKey.from("Trace", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Trace traceAnnotation = method.getAnnotation(kamon.annotation.api.Trace.class);
             final String operationName = getOperationName(traceAnnotation.operationName(), obj, clazz, className, methodName);
             final Map<String, String> tags = getTags(obj, clazz, traceAnnotation.tags());
@@ -112,13 +110,37 @@ public class AnnotationCache {
         return (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
     }
 
-    private static String getKey(String prefix, Method method, Object obj, Class<?> clazz) {
-        final String methodName = method.getName();
-        final int hashCode = (obj != null) ? obj.hashCode() : clazz.hashCode();
-        final String parameterCount = String.valueOf(method.getParameterCount());
-        final String parameterTypes = Strings.join(Arrays.stream(method.getParameterTypes()).map(Class::toString).collect(Collectors.toList()), ":");
-        final String returnType = method.getReturnType().toString();
+    private static class MetricKey {
+        private final String prefix;
+        private final Method method;
+        private final Object instance;
+        private final Class<?> clazz;
 
-        return prefix + "|" + hashCode + "|" + methodName + "|" + parameterCount + "|" + parameterTypes + "|" + returnType;
+        private  MetricKey(String prefix, Method method, Object instance, Class<?> clazz) {
+            this.prefix = prefix;
+            this.method = method;
+            this.instance = instance;
+            this.clazz = clazz;
+        }
+
+        public static MetricKey from(String prefix, Method method, Object instance, Class<?> clazz){
+            return new MetricKey(prefix, method, instance, clazz);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            MetricKey metricKey = (MetricKey) o;
+            return Objects.equals(prefix, metricKey.prefix) &&
+                    Objects.equals(method, metricKey.method) &&
+                    Objects.equals(instance, metricKey.instance) &&
+                    Objects.equals(clazz, metricKey.clazz);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(prefix, method, instance, clazz);
+        }
     }
 }
