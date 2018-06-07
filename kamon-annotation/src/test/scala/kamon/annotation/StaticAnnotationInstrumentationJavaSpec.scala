@@ -37,9 +37,9 @@ class StaticAnnotationInstrumentationJavaSpec extends WordSpec
 
   "the Kamon Annotation module" should {
     "create a new trace when is invoked a static method annotated with @Trace" in {
-      for (id ← 1 to 10) AnnotatedJavaClass.trace()
+      for (_ ← 1 to 10) AnnotatedJavaClass.trace()
 
-      eventually(timeout(10 seconds)) {
+      eventually(timeout(5 seconds)) {
         val span = reporter.nextSpan().value
         val spanTags = stringTag(span) _
         span.operationName shouldBe "trace"
@@ -63,13 +63,17 @@ class StaticAnnotationInstrumentationJavaSpec extends WordSpec
     "count the current invocations of a static method annotated with @RangeSampler" in {
       for (_ ← 1 to 10) AnnotatedJavaClass.countMinMax()
 
-      Kamon.rangeSampler("minMax").distribution().max should be(1)
+      eventually(timeout(5 seconds)) {
+        Kamon.rangeSampler("minMax").distribution().max should be(0)
+      }
     }
 
     "count the current invocations of a static method annotated with @RangeSampler and evaluate EL expressions" in {
       for (_ ← 1 to 10) AnnotatedJavaClass.countMinMaxWithEL()
 
-      Kamon.rangeSampler("minMax:10").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(1)
+      eventually(timeout(5 seconds)) {
+        Kamon.rangeSampler("minMax:10").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(0)
+      }
     }
 
     "measure the time spent in the execution of a static method annotated with @Timer" in {

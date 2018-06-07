@@ -41,10 +41,22 @@ class AnnotationInstrumentationSpec extends WordSpec
     "create a new trace when is invoked a method annotated with @Trace" in {
      for (id ← 1 to 10) Annotated(id).trace()
 
-      eventually(timeout(10 seconds)) {
+      eventually(timeout(3 seconds)) {
         val span = reporter.nextSpan().value
         val spanTags = stringTag(span) _
         span.operationName shouldBe "trace"
+        spanTags("slow-service") shouldBe "service"
+        spanTags("env") shouldBe "prod"
+      }
+    }
+
+    "pickup a SpanCustomizer from the current context and apply it to the new spans" in {
+      for (id ← 1 to 10) Annotated(id).traceWithSpanCustomizer()
+
+      eventually(timeout(3 seconds)) {
+        val span = reporter.nextSpan().value
+        val spanTags = stringTag(span) _
+        span.operationName shouldBe "customized-operation-name"
         spanTags("slow-service") shouldBe "service"
         spanTags("env") shouldBe "prod"
       }
@@ -137,6 +149,10 @@ class AnnotationInstrumentationSpec extends WordSpec
 case class Annotated(id: Long) {
   @Trace(operationName = "trace", tags = "${'slow-service':'service', 'env':'prod'}")
   def trace(): Unit = {}
+
+  @SpanCustomizer(operationName = "customized-operation-name" )
+  @Trace(tags = "${'slow-service':'service', 'env':'prod'}")
+  def traceWithSpanCustomizer(): Unit = {}
 
   @Count(name = "count")
   def count(): Unit = {}

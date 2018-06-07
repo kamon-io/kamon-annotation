@@ -26,6 +26,11 @@ public class AnnotationInstrumentation extends KanelaInstrumentation {
                     .withAdvisorFor(annotatedMethods, () -> TraceAnnotationAdvisor.class)
                     .build());
 
+        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.SpanCustomizer", (builder, annotatedMethods) ->
+                builder
+                        .withAdvisorFor(annotatedMethods, () -> SpanCustomizerAnnotationAdvisor.class)
+                        .build());
+
         forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Count", (builder, annotatedMethods) ->
                 builder
                     .withAdvisorFor(annotatedMethods, () -> CountAnnotationAdvisor.class)

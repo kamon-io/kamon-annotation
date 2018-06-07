@@ -16,21 +16,25 @@
 
 package kamon.annotation.instrumentation.advisor;
 
-import kamon.annotation.instrumentation.cache.AnnotationCache;
-import kamon.metric.Counter;
+import kamon.Kamon;
+import kamon.annotation.api.SpanCustomizer;
+import kamon.context.Storage;
+import kamon.trace.SpanCustomizer$;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
 import java.lang.reflect.Method;
 
-public class CountAnnotationAdvisor {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void count(@Advice.This(optional = true) Object obj,
-                             @Advice.Origin Class<?> clazz,
-                             @Advice.Origin Method method   ,
-                             @Advice.Origin("#t") String className,
-                             @Advice.Origin("#m") String methodName) {
+public class SpanCustomizerAnnotationAdvisor {
+    @Advice.OnMethodEnter
+    public static void onEnter(@Advice.Origin Method method,
+                               @Advice.Local("scope") Storage.Scope scope) {
 
-        final Counter counter = AnnotationCache.getCounter(method, obj, clazz, className, methodName);
-        counter.increment();
+        final SpanCustomizer annotation = method.getAnnotation(SpanCustomizer.class);
+        scope = Kamon.storeContext(Kamon.currentContext().withKey(SpanCustomizer$.MODULE$.ContextKey(), SpanCustomizer$.MODULE$.forOperationName(annotation.operationName())));
+    }
+
+    @Advice.OnMethodExit
+    public static void onExit(@Advice.Local("scope") Storage.Scope scope) {
+        scope.close();
     }
 }

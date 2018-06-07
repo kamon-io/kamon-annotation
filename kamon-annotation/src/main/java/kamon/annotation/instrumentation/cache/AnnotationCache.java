@@ -53,7 +53,6 @@ public class AnnotationCache {
         });
     }
 
-
     public static Histogram getHistogram(Method method, Object obj, Class<?> clazz, String className, String methodName) {
         return (Histogram) metrics.computeIfAbsent(MetricKey.from("Histogram", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Histogram histogramAnnotation = method.getAnnotation(kamon.annotation.api.Histogram.class);
@@ -102,11 +101,11 @@ public class AnnotationCache {
     }
 
     private static Map<String, String> getTags(Object obj, Class<?> clazz, String tags) {
-        return (obj != null) ? TagsEvaluator.eval(obj,tags) : TagsEvaluator.eval(clazz, tags);
+        return (obj != null) ? TagsEvaluator.eval(obj, tags) : TagsEvaluator.eval(clazz, tags);
     }
 
     private static String getOperationName(String name, Object obj, Class<?> clazz, String className, String methodName) {
-        final String evaluatedString = (obj !=null) ? StringEvaluator.evaluate(obj, name) : StringEvaluator.evaluate(clazz, name);
+        final String evaluatedString = (obj != null) ? StringEvaluator.evaluate(obj, name) : StringEvaluator.evaluate(clazz, name);
         return (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
     }
 
@@ -133,9 +132,9 @@ public class AnnotationCache {
             if (o == null || getClass() != o.getClass()) return false;
             MetricKey metricKey = (MetricKey) o;
             return Objects.equals(prefix, metricKey.prefix) &&
-                    Objects.equals(method, metricKey.method) &&
-                    Objects.equals(instance, metricKey.instance) &&
-                    Objects.equals(clazz, metricKey.clazz);
+                   Objects.equals(method, metricKey.method) &&
+                   Objects.equals(instance, metricKey.instance) &&
+                   Objects.equals(clazz, metricKey.clazz);
         }
 
         @Override

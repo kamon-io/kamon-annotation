@@ -14,23 +14,34 @@
  * =========================================================================================
  */
 
-package kamon.annotation.instrumentation.advisor;
+package kamon.annotation.api;
 
-import kamon.annotation.instrumentation.cache.AnnotationCache;
-import kamon.metric.Counter;
-import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
-import java.lang.reflect.Method;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class CountAnnotationAdvisor {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void count(@Advice.This(optional = true) Object obj,
-                             @Advice.Origin Class<?> clazz,
-                             @Advice.Origin Method method   ,
-                             @Advice.Origin("#t") String className,
-                             @Advice.Origin("#m") String methodName) {
 
-        final Counter counter = AnnotationCache.getCounter(method, obj, clazz, className, methodName);
-        counter.increment();
-    }
+/**
+ * A marker annotation to allows users to customize and add additional information to Spans created by instrumentation.
+ * <p>
+ * <p>
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}SpanCustomizer(operationName = "coolName")
+ *     public String callDatabase(String query) {
+ *         return Db.executeQuery(query);
+ *     }
+ * </code></pre>
+ * <p>
+ * <p>
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface SpanCustomizer {
+    /**
+     * @return The operationName for the current span.
+     */
+    String operationName();
 }
