@@ -26,9 +26,9 @@ val commonSettings = Seq(
     crossScalaVersions := Seq("2.12.6", "2.11.12", "2.10.7"))
 
 lazy val annotationApi = (project in file("kamon-annotation-api"))
-  .enablePlugins(JmhPlugin)
   .settings(moduleName := "kamon-annotation-api", resolvers += Resolver.mavenLocal)
-  .settings(noPublishing: _*)
+  .settings(crossPaths := false, autoScalaLibrary := false) // vanilla java
+  .settings(publishArtifact in (Compile, packageDoc) := false, publishArtifact in packageDoc := false, sources in (Compile,doc) := Seq.empty)
   .settings(commonSettings: _*)
 
 lazy val annotation = (project in file("kamon-annotation"))
