@@ -20,8 +20,6 @@ import kamon.Kamon;
 import kamon.annotation.instrumentation.cache.AnnotationCache;
 import kamon.context.Storage;
 import kamon.trace.Span;
-import kamon.trace.SpanCustomizer;
-import kamon.trace.SpanCustomizer$;
 import kamon.trace.Tracer;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
@@ -38,7 +36,7 @@ public class TraceAnnotationAdvisor {
                                  @Advice.Local("scope") Storage.Scope scope) {
 
         final Tracer.SpanBuilder builder = AnnotationCache.getSpanBuilder(method, obj, clazz, className, methodName);
-        span =  Kamon.currentContext().get(SpanCustomizer$.MODULE$.ContextKey()).customize(builder).start();
+        span = builder.start();
         scope = Kamon.storeContext(Kamon.currentContext().withKey(Span.ContextKey(), span));
     }
 

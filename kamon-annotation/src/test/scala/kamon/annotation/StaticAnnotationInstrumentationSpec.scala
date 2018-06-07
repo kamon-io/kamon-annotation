@@ -66,13 +66,17 @@ class StaticAnnotationInstrumentationSpec extends WordSpec
         AnnotatedObject.countMinMax()
       }
 
-      Kamon.rangeSampler("minMax").distribution().max should be(1)
+      eventually(timeout(5 seconds)) {
+        Kamon.rangeSampler("minMax").distribution().max should be(0)
+      }
     }
 
     "count the current invocations of a method annotated with @RangeSampler and evaluate EL expressions in a Scala Object" in {
       for (_ ← 1 to 10) AnnotatedObject.countMinMaxWithEL()
 
-      Kamon.rangeSampler("minMax:10").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(1)
+      eventually(timeout(5 seconds)) {
+        Kamon.rangeSampler("minMax:10").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(0)
+      }
     }
 
     "measure the time spent in the execution of a method annotated with @Timer in a Scala Object" in {

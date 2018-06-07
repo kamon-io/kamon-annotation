@@ -23,8 +23,7 @@ lazy val root = (project in file("."))
 val commonSettings = Seq(
     scalaVersion := "2.12.6",
     resolvers += Resolver.mavenLocal,
-    crossScalaVersions := Seq("2.12.6", "2.11.12", "2.10.7")
-)
+    crossScalaVersions := Seq("2.12.6", "2.11.12", "2.10.7"))
 
 lazy val annotationApi = (project in file("kamon-annotation-api"))
   .enablePlugins(JmhPlugin)

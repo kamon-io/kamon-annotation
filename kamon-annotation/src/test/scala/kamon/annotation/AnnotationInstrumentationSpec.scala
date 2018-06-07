@@ -79,14 +79,18 @@ class AnnotationInstrumentationSpec extends WordSpec
       for (id ← 1 to 10) {
         Annotated(id).countMinMax()
       }
-      Kamon.rangeSampler("minMax").distribution().max should be(1)
+      eventually(timeout(5 seconds)) {
+        Kamon.rangeSampler("minMax").distribution().max should be(0)
+      }
     }
 
     "count the current invocations of a method annotated with @RangeSampler and evaluate EL expressions" in {
       for (id ← 1 to 10) Annotated(id).countMinMaxWithEL()
 
-      Kamon.rangeSampler("minMax:1").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(1)
-      Kamon.rangeSampler("minMax:2").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(1)
+      eventually(timeout(5 seconds)) {
+        Kamon.rangeSampler("minMax:1").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(0)
+        Kamon.rangeSampler("minMax:2").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(0)
+      }
     }
 
     "measure the time spent in the execution of a method annotated with @Timer" in {
@@ -151,8 +155,12 @@ case class Annotated(id: Long) {
   def trace(): Unit = {}
 
   @SpanCustomizer(operationName = "customized-operation-name" )
-  @Trace(tags = "${'slow-service':'service', 'env':'prod'}")
-  def traceWithSpanCustomizer(): Unit = {}
+  def traceWithSpanCustomizer(): Unit = {
+    val spanBuilder = Kamon.buildSpan("unknown").withTag("slow-service", "service").withTag("env", "prod")
+    Kamon.withSpan(Kamon.currentContext().get(kamon.trace.SpanCustomizer.ContextKey).customize(spanBuilder).start()) {
+      customizeSpan()
+    }
+  }
 
   @Count(name = "count")
   def count(): Unit = {}
@@ -177,6 +185,8 @@ case class Annotated(id: Long) {
 
   @Histogram(name = "#{'histogram:' += this.id}", tags = "${'histogram':'hdr', 'env':'prod'}")
   def histogramWithEL(operationName: Long): Long = operationName
+
+  def customizeSpan():Unit = {}
 }
 
 object Annotated {

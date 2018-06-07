@@ -16,6 +16,7 @@
 
 package kamon.annotation.el
 
+import kanela.agent.util.log.Logger
 import shaded.javax.el.ELProcessor
 
 import scala.util.{Failure, Success, Try}
@@ -31,9 +32,9 @@ object EnhancedELProcessor {
 
     def evalToString(expression: String): String = extract(expression).map { str ⇒
       eval[String](str) match {
-        case Success(value) ⇒ value
-        case Failure(cause) ⇒
-          println(s"${cause.getMessage} -> we will complete the operation with 'unknown' string")
+        case Success(value) => value
+        case Failure(cause) =>
+          Logger.warn(() => s"${cause.getMessage} -> we will complete the operation with 'unknown' string")
           "unknown"
       }
     } getOrElse expression
@@ -42,7 +43,7 @@ object EnhancedELProcessor {
       eval[java.util.HashMap[String, String]](s"{$str}") match {
         case Success(value) ⇒ value.asInstanceOf[java.util.HashMap[String, String]].asScala.toMap
         case Failure(cause) ⇒
-          println(s"${cause.getMessage} -> we will complete the operation with an empty map")
+          Logger.warn(() => s"${cause.getMessage} -> we will complete the operation with an empty map")
           Map.empty[String, String]
       }
     } getOrElse Map.empty[String, String]
