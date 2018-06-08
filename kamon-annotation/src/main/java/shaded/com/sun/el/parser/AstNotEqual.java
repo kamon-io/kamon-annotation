@@ -40,9 +40,9 @@
 
 package shaded.com.sun.el.parser;
 
+import shaded.javax.el.ELException;
 
 import shaded.com.sun.el.lang.EvaluationContext;
-import shaded.javax.el.ELException;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]

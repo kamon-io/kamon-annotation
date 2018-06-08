@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 1997-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,16 +40,14 @@
 
 package shaded.com.sun.el.lang;
 
+import shaded.com.sun.el.util.MessageFactory;
+import shaded.javax.el.ELException;
+import shaded.javax.el.PropertyNotFoundException;
+
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-
-import shaded.javax.el.ELContext;
-import shaded.javax.el.ELException;
-import shaded.javax.el.PropertyNotFoundException;
-
-import shaded.com.sun.el.util.MessageFactory;
 
 /**
  * A helper class that implements the EL Specification
@@ -379,13 +377,20 @@ public class ELSupport {
 
     public final static Object coerceToType(final Object obj, final Class<?> type)
             throws IllegalArgumentException {
+        return coerceToType(obj, type, false);
+    }
+
+    public final static Object coerceToType(final Object obj, final Class<?> type,
+                                            boolean isEL22Compatible)
+            throws IllegalArgumentException {
+
         if (type == null || Object.class.equals(type) ||
                 (obj != null && type.isAssignableFrom(obj.getClass()))) {
             return obj;
         }
 
         // new to EL 3.0
-        if (obj == null && !type.isPrimitive() && !String.class.equals(type)) {
+        if (!isEL22Compatible && obj == null && !type.isPrimitive() && !String.class.equals(type)) {
             return null;
         }
 
@@ -403,6 +408,10 @@ public class ELSupport {
         }
         if (type.isEnum()) {
             return coerceToEnum(obj, type);
+        }
+
+        if (obj == null) {
+            return null; 
         }
 
         if (obj instanceof String) {
@@ -514,5 +523,4 @@ public class ELSupport {
     public ELSupport() {
         super();
     }
-
 }

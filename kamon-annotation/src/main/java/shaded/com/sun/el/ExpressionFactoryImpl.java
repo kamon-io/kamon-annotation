@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 1997-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package shaded.com.sun.el;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Properties;
 import java.lang.reflect.Method;
 
 import shaded.javax.el.ELContext;
@@ -54,11 +55,13 @@ import shaded.javax.el.ELResolver;
 import shaded.com.sun.el.lang.ExpressionBuilder;
 import shaded.com.sun.el.lang.ELSupport;
 import shaded.com.sun.el.util.MessageFactory;
+import shaded.com.sun.el.stream.StreamELResolver;
 
 /**
- * @see shaded.javax.el.ExpressionFactory
+ * @see javax.el.ExpressionFactory
  * 
  * @author Jacob Hookom [jacob@hookom.net]
+ * @author Kin-man Chung
  * @version $Change: 181177 $$DateTime: 2001/06/26 08:45:09 $$Author: kchung $
  */
 public class ExpressionFactoryImpl extends ExpressionFactory {
@@ -70,10 +73,16 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         super();
     }
 
+    public ExpressionFactoryImpl(Properties properties) {
+        super();
+        this.properties = properties;
+        this.isBackwardCompatible22 = "true".equals(getProperty("javax.el.bc2.2"));
+    }
+
     public Object coerceToType(Object obj, Class type) {
         Object ret;
         try {
-            ret = ELSupport.coerceToType(obj, type);
+            ret = ELSupport.coerceToType(obj, type, isBackwardCompatible22);
         } catch (IllegalArgumentException ex) {
             throw new ELException(ex);
         }
@@ -112,9 +121,14 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         return new ValueExpressionLiteral(instance, expectedType);
     }
 
+    public String getProperty(String key) {
+        if (properties == null) return null;
+        return properties.getProperty(key);
+    }
+
     @Override
     public ELResolver getStreamELResolver() {
-        return null;
+        return new StreamELResolver();
     }
 
     @Override
@@ -122,4 +136,7 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         Map<String, Method> funcs = new HashMap<String, Method>();
         return funcs;
     }
+
+    private Properties properties;
+    private boolean isBackwardCompatible22;
 }

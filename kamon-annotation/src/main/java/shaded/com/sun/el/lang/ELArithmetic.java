@@ -349,7 +349,8 @@ public abstract class ELArithmetic {
     }
 
     public final static boolean isNumberType(final Class type) {
-        return type == (Long.class) || type == Long.TYPE || type == (Double.class) || type == Double.TYPE || type == (Byte.class) || type == Byte.TYPE || type == (Short.class) || type == Short.TYPE || type == (Integer.class) || type == Integer.TYPE || type == (Float.class) || type == Float.TYPE || type == (BigInteger.class) || type == (BigDecimal.class);
+        return type == Long.TYPE || type == Double.TYPE || type == Byte.TYPE || type == Short.TYPE || type == Integer.TYPE
+                || type == Float.TYPE || Number.class.isAssignableFrom(type);
     }
 
     /**

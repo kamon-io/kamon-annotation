@@ -1,46 +1,5 @@
 /*
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- * Copyright (c) 1997-2013 Oracle and/or its affiliates. All rights reserved.
- *
- * The contents of this file are subject to the terms of either the GNU
- * General Public License Version 2 only ("GPL") or the Common Development
- * and Distribution License("CDDL") (collectively, the "License").  You
- * may not use this file except in compliance with the License.  You can
- * obtain a copy of the License at
- * https://glassfish.dev.java.net/public/CDDL+GPL_1_1.html
- * or packager/legal/LICENSE.txt.  See the License for the specific
- * language governing permissions and limitations under the License.
- *
- * When distributing the software, include this License Header Notice in each
- * file and include the License file at packager/legal/LICENSE.txt.
- *
- * GPL Classpath Exception:
- * Oracle designates this particular file as subject to the "Classpath"
- * exception as provided by Oracle in the GPL Version 2 section of the License
- * file that accompanied this code.
- *
- * Modifications:
- * If applicable, add the following below the License Header, with the fields
- * enclosed by brackets [] replaced by your own identifying information:
- * "Portions Copyright [year] [name of copyright owner]"
- *
- * Contributor(s):
- * If you wish your version of this file to be governed by only the CDDL or
- * only the GPL Version 2, indicate your decision by adding "[Contributor]
- * elects to include this software in this distribution under the [CDDL or GPL
- * Version 2] license."  If you don't indicate a single choice of license, a
- * recipient has the option to distribute your version of this file under
- * either the CDDL, the GPL Version 2 or to extend the choice of license to
- * its licensees as provided above.  However, if you add GPL Version 2 code
- * and therefore, elected the GPL Version 2 license, then the option applies
- * only if the new code is made subject to such option by the copyright
- * holder.
- *
- *
- * This file incorporates work covered by the following copyright and
- * permission notice:
- *
+ * Copyright (c) 1997-2018 Oracle and/or its affiliates. All rights reserved.
  * Copyright 2004 The Apache Software Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,7 +19,6 @@ package shaded.javax.el;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.ref.SoftReference;
 import java.lang.ref.ReferenceQueue;
 import java.beans.FeatureDescriptor;
@@ -188,8 +146,8 @@ public class BeanELResolver extends ELResolver {
         public BeanProperty(Class<?> baseClass,
                             PropertyDescriptor descriptor) {
             this.descriptor = descriptor;
-            readMethod = getMethod(baseClass, descriptor.getReadMethod());
-            writeMethod = getMethod(baseClass, descriptor.getWriteMethod());
+            readMethod = ELUtil.getMethod(baseClass, descriptor.getReadMethod());
+            writeMethod = ELUtil.getMethod(baseClass, descriptor.getWriteMethod());
         }
                                                                                 
         public Class getPropertyType() {
@@ -669,49 +627,6 @@ public class BeanELResolver extends ELResolver {
         }
 
         return Object.class;
-    }
-
-    /*
-     * Get a public method form a public class or interface of a given method.
-     * Note that if a PropertyDescriptor is obtained for a non-public class that
-     * implements a public interface, the read/write methods will be for the
-     * class, and therefore inaccessible.  To correct this, a version of the
-     * same method must be found in a superclass or interface.
-     **/
-
-    static private Method getMethod(Class<?> cl, Method method) {
-
-        if (method == null) {
-            return null;
-        }
-
-        if (Modifier.isPublic (cl.getModifiers ())) {
-            return method;
-        }
-        Class<?> [] interfaces = cl.getInterfaces ();
-        for (int i = 0; i < interfaces.length; i++) {
-            Class<?> c = interfaces[i];
-            Method m = null;
-            try {
-                m = c.getMethod(method.getName(), method.getParameterTypes());
-                c = m.getDeclaringClass();
-                if ((m = getMethod(c, m)) != null)
-                    return m;
-            } catch (NoSuchMethodException ex) {
-            }
-        }
-        Class<?> c = cl.getSuperclass();
-        if (c != null) {
-            Method m = null;
-            try {
-                m = c.getMethod(method.getName(), method.getParameterTypes());
-                c = m.getDeclaringClass();
-                if ((m = getMethod(c, m)) != null)
-                    return m;
-            } catch (NoSuchMethodException ex) {
-            }
-        }
-        return null;
     }
 
     private BeanProperty getBeanProperty(ELContext context,

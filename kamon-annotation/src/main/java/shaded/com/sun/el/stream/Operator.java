@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 1997-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -36,27 +36,15 @@
  * and therefore, elected the GPL Version 2 license, then the option applies
  * only if the new code is made subject to such option by the copyright
  * holder.
+ *
+ * @author Kin-man Chung
  */
 
-package shaded.com.sun.el.parser;
+package shaded.com.sun.el.stream;
 
-import shaded.javax.el.ELException;
+import java.util.Iterator;
 
-import shaded.com.sun.el.lang.EvaluationContext;
+interface Operator {
 
-/**
- * @author Jacob Hookom [jacob@hookom.net]
- * @version $Change: 181177 $$DateTime: 2001/06/26 08:45:09 $$Author: kchung $
- */
-public class BooleanNode extends SimpleNode {
-    /**
-     * @param i
-     */
-    public BooleanNode(int i) {
-        super(i);
-    }
-    public Class getType(EvaluationContext ctx)
-            throws ELException {
-        return Boolean.class;
-    }
+    Iterator<Object> iterator(Iterator<Object> upstream);
 }

@@ -40,8 +40,10 @@
 
 package shaded.com.sun.el.parser;
 
-import shaded.com.sun.el.lang.EvaluationContext;
 import shaded.javax.el.ELException;
+import shaded.javax.el.VariableMapper;
+import shaded.com.sun.el.ValueExpressionImpl;
+import shaded.com.sun.el.lang.EvaluationContext;
 
 public
 class AstAssign extends SimpleNode {

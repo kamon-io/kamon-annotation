@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 1997-2010 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -36,21 +36,56 @@
  * and therefore, elected the GPL Version 2 license, then the option applies
  * only if the new code is made subject to such option by the copyright
  * holder.
+ *
+ * @author Kin-man Chung
  */
 
-package shaded.com.sun.el.parser;
+package shaded.com.sun.el.stream;
 
-import shaded.javax.el.ELException;
+import java.util.Iterator;
+import java.util.Comparator;
 
-import shaded.com.sun.el.lang.EvaluationContext;
+import shaded.javax.el.ELContext;
+import shaded.javax.el.LambdaExpression;
 
-public final class AstPropertySuffix extends SimpleNode {
-    public AstPropertySuffix(int id) {
-        super(id);
+public class Optional {
+
+    private final static Optional EMPTY = new Optional();
+    private final Object value;
+
+    Optional(Object value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+        this.value = value;
     }
 
-    public Object getValue(EvaluationContext ctx)
-            throws ELException {
-        return this.image;
+    Optional() {
+        this.value = null;
+    }
+
+    public boolean isPresent() {
+        return value != null;
+    }
+
+    public void ifPresent(LambdaExpression lambda) {
+        if (value != null) {
+            lambda.invoke(value);
+        }
+    }
+
+    public Object get() {
+        if (value == null) {
+            throw new java.util.NoSuchElementException("No value present");
+        }
+        return value;
+    }
+
+    public Object orElse(Object other) {
+        return value != null? value: other;
+    }
+
+    public Object orElseGet(LambdaExpression other) {
+        return value != null? value: other.invoke();
     }
 }

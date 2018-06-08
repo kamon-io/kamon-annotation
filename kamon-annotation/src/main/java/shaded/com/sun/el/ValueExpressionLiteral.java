@@ -40,17 +40,20 @@
 
 package shaded.com.sun.el;
 
-import shaded.com.sun.el.util.MessageFactory;
-import shaded.com.sun.el.util.ReflectionUtil;
+import java.io.Externalizable;
+import java.io.IOException;
 import shaded.javax.el.ELContext;
 import shaded.javax.el.ELException;
 import shaded.javax.el.PropertyNotWritableException;
-import shaded.javax.el.ValueExpression;
 
-import java.io.Externalizable;
-import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+
+import shaded.javax.el.ValueExpression;
+
+import shaded.com.sun.el.lang.ELSupport;
+import shaded.com.sun.el.util.MessageFactory;
+import shaded.com.sun.el.util.ReflectionUtil;
 
 public final class ValueExpressionLiteral extends ValueExpression implements
         Externalizable {

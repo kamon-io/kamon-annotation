@@ -16,6 +16,8 @@
 
 package kamon.annotation
 
+import java.util.UUID
+
 import kamon.Kamon
 import kamon.annotation.api._
 import kamon.metric.{Histogram => _, RangeSampler => _, Timer => _, _}

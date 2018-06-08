@@ -40,17 +40,18 @@
 
 package shaded.com.sun.el;
 
-import shaded.com.sun.el.util.ReflectionUtil;
-import shaded.javax.el.ELContext;
-import shaded.javax.el.ELException;
-import shaded.javax.el.MethodExpression;
-import shaded.javax.el.MethodInfo;
-
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import shaded.javax.el.ELContext;
+import shaded.javax.el.ELException;
+import shaded.javax.el.MethodExpression;
+import shaded.javax.el.MethodInfo;
+
+import shaded.com.sun.el.lang.ELSupport;
+import shaded.com.sun.el.util.ReflectionUtil;
 
 public class MethodExpressionLiteral extends MethodExpression implements Externalizable {
 

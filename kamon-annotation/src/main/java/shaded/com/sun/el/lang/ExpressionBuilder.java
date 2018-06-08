@@ -40,18 +40,39 @@
 
 package shaded.com.sun.el.lang;
 
+import java.io.StringReader;
+import java.lang.reflect.Method;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
+import java.lang.ref.ReferenceQueue;
+import java.util.Map;
+import java.util.Collections;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
+
+import shaded.javax.el.ELContext;
+import shaded.javax.el.ELException;
+import shaded.javax.el.FunctionMapper;
+import shaded.javax.el.MethodExpression;
+import shaded.javax.el.ValueExpression;
+import shaded.javax.el.VariableMapper;
+
 import shaded.com.sun.el.MethodExpressionImpl;
 import shaded.com.sun.el.MethodExpressionLiteral;
 import shaded.com.sun.el.ValueExpressionImpl;
-import shaded.com.sun.el.parser.*;
+import shaded.com.sun.el.parser.AstCompositeExpression;
+import shaded.com.sun.el.parser.AstDeferredExpression;
+import shaded.com.sun.el.parser.AstDynamicExpression;
+import shaded.com.sun.el.parser.AstFunction;
+import shaded.com.sun.el.parser.AstIdentifier;
+import shaded.com.sun.el.parser.AstLiteralExpression;
+import shaded.com.sun.el.parser.AstMethodArguments;
+import shaded.com.sun.el.parser.AstValue;
+import shaded.com.sun.el.parser.ELParser;
+import shaded.com.sun.el.parser.Node;
+import shaded.com.sun.el.parser.NodeVisitor;
+import shaded.com.sun.el.parser.ParseException;
 import shaded.com.sun.el.util.MessageFactory;
-import shaded.javax.el.*;
-
-import java.io.StringReader;
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.SoftReference;
-import java.lang.reflect.Method;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
