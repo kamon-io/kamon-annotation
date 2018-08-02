@@ -36,7 +36,7 @@ lazy val annotation = (project in file("kamon-annotation"))
   .enablePlugins(JavaAgent)
   .settings(moduleName := "kamon-annotation")
   .settings(commonSettings: _*)
-  .settings(javaAgents += "io.kamon"  % "kanela-agent"  % "0.0.300"  % "compile;test")
+  .settings(javaAgents += "io.kamon"  % "kanela-agent"  % "0.0.12"  % "compile;test")
   .settings(
       libraryDependencies ++=
         compileScope(kamonCore) ++
