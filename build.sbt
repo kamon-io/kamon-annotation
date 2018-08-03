@@ -29,7 +29,7 @@ val commonSettings = Seq(
 lazy val annotationApi = (project in file("kamon-annotation-api"))
   .settings(moduleName := "kamon-annotation-api", resolvers += Resolver.mavenLocal)
   .settings(crossPaths := false, autoScalaLibrary := false) // vanilla java
-  .settings(publishArtifact in (Compile, packageDoc) := false, publishArtifact in packageDoc := false, sources in (Compile,doc) := Seq.empty)
+  .settings(publishArtifact in (Compile, packageDoc) := false, publishArtifact in packageDoc := true, sources in (Compile,doc) := Seq.empty)
   .settings(commonSettings: _*)
 
 lazy val annotation = (project in file("kamon-annotation"))
