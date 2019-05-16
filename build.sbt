@@ -13,18 +13,19 @@
  * =========================================================================================
  */
 
-val kamonCore       = "io.kamon"      %% "kamon-core"     % "1.1.2"
-val kamonTestkit    = "io.kamon"      %% "kamon-testkit"  % "1.1.2"
+val kamonCore       = "io.kamon"      %% "kamon-core"     % "2.0.0-7dd537de1b5654d5f0d019f076edccb757775f4d"
+val kamonTestkit    = "io.kamon"      %% "kamon-testkit"  % "2.0.0-7dd537de1b5654d5f0d019f076edccb757775f4d"
 
 lazy val root = (project in file("."))
   .settings(noPublishing: _*)
   .aggregate(annotationApi, annotation)
 
 val commonSettings = Seq(
-    scalaVersion := "2.12.6",
+    scalaVersion := "2.12.8",
     isSnapshot := false,
     resolvers += Resolver.mavenLocal,
-    crossScalaVersions := Seq("2.12.6", "2.11.12", "2.10.7"))
+    resolvers += Resolver.bintrayRepo("kamon-io", "snapshots"),
+    crossScalaVersions := Seq("2.12.8", "2.11.12", "2.10.7"))
 
 lazy val annotationApi = (project in file("kamon-annotation-api"))
   .settings(moduleName := "kamon-annotation-api", resolvers += Resolver.mavenLocal)
@@ -37,9 +38,10 @@ lazy val annotation = (project in file("kamon-annotation"))
   .enablePlugins(JavaAgent)
   .settings(moduleName := "kamon-annotation")
   .settings(commonSettings: _*)
-  .settings(javaAgents += "io.kamon"  % "kanela-agent"  % "0.0.12"  % "compile;test")
+  .settings(javaAgents += "io.kamon"  % "kanela-agent"  % "1.0.0-M27"  % "compile;test")
   .settings(
       libraryDependencies ++=
         compileScope(kamonCore) ++
           testScope(scalatest, logbackClassic, kamonTestkit)
   ).dependsOn(annotationApi)
+

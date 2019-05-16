@@ -20,7 +20,7 @@ import kamon.Kamon;
 import kamon.annotation.instrumentation.cache.AnnotationCache;
 import kamon.context.Storage;
 import kamon.trace.Span;
-import kamon.trace.Tracer;
+import kamon.trace.SpanBuilder;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
 import java.lang.reflect.Method;
@@ -35,9 +35,10 @@ public class TraceAnnotationAdvisor {
                                  @Advice.Local("span") Span span,
                                  @Advice.Local("scope") Storage.Scope scope) {
 
-        final Tracer.SpanBuilder builder = AnnotationCache.getSpanBuilder(method, obj, clazz, className, methodName);
+
+        final SpanBuilder builder = AnnotationCache.getSpanBuilder(method, obj, clazz, className, methodName);
         span = builder.start();
-        scope = Kamon.storeContext(Kamon.currentContext().withKey(Span.ContextKey(), span));
+        scope = Kamon.storeContext(Kamon.currentContext().withKey(Span.Key(), span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -47,7 +48,7 @@ public class TraceAnnotationAdvisor {
 
         scope.close();
         if (throwable != null)
-            span.addError(throwable.getMessage(), throwable);
+            span.fail(throwable.getMessage(), throwable);
         span.finish();
     }
 }

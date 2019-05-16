@@ -16,15 +16,14 @@
 
 package kamon.annotation
 
-import java.util.UUID
-
 import kamon.Kamon
 import kamon.annotation.api._
 import kamon.metric.{Histogram => _, RangeSampler => _, Timer => _, _}
-import kamon.testkit.{MetricInspection, Reconfigure, TestSpanReporter}
-import kamon.trace.Span
-import kamon.trace.Span.TagValue
-import kamon.util.Registration
+import kamon.module.Module.Registration
+import kamon.tag.TagSet
+import kamon.tag.Lookups._
+import kamon.testkit.{InstrumentInspection, MetricInspection, Reconfigure, SpanInspection, TestSpanReporter}
+import kamon.trace.{Hooks, Span}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.SpanSugar
 import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpec}
@@ -34,12 +33,15 @@ class AnnotationInstrumentationSpec extends WordSpec
   with Eventually
   with SpanSugar
   with Reconfigure
-  with MetricInspection
+  with InstrumentInspection.Syntax
+  with SpanInspection
+  with MetricInspection.Syntax
   with BeforeAndAfterAll
-  with TimerMetricInspection
   with OptionValues {
 
+
   "the Kamon Annotation module" should {
+
     "create a new trace when is invoked a method annotated with @Trace" in {
      for (id ← 1 to 10) Annotated(id).trace()
 
@@ -67,14 +69,14 @@ class AnnotationInstrumentationSpec extends WordSpec
     "count the invocations of a method annotated with @Count" in {
       for (id ← 1 to 10) Annotated(id).count()
 
-      Kamon.counter("count").value() should be(10)
+      Kamon.counter("count").withoutTags().value() should be(10)
     }
 
     "count the invocations of a method annotated with @Count and evaluate EL expressions" in {
       for (id ← 1 to 2) Annotated(id).countWithEL()
 
-      Kamon.counter("counter:1").refine(Map("counter" -> "1", "env" -> "prod")).value()should be(1)
-      Kamon.counter("counter:2").refine(Map("counter" -> "1", "env" -> "prod")).value()should be(1)
+      Kamon.counter("counter:1").withTags(TagSet.from(Map("counter" -> "1", "env" -> "prod"))).value()should be(1)
+      Kamon.counter("counter:2").withTags(TagSet.from(Map("counter" -> "1", "env" -> "prod"))).value()should be(1)
     }
 
     "count the current invocations of a method annotated with @RangeSampler" in {
@@ -82,7 +84,7 @@ class AnnotationInstrumentationSpec extends WordSpec
         Annotated(id).countMinMax()
       }
       eventually(timeout(5 seconds)) {
-        Kamon.rangeSampler("minMax").distribution().max should be(0)
+        Kamon.rangeSampler("minMax").withoutTags().distribution().max should be(0)
       }
     }
 
@@ -90,27 +92,27 @@ class AnnotationInstrumentationSpec extends WordSpec
       for (id ← 1 to 10) Annotated(id).countMinMaxWithEL()
 
       eventually(timeout(5 seconds)) {
-        Kamon.rangeSampler("minMax:1").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(0)
-        Kamon.rangeSampler("minMax:2").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(0)
+        Kamon.rangeSampler("minMax:1").withTags(TagSet.from(Map("minMax" -> "1", "env" -> "dev"))).distribution().sum should be(0)
+        Kamon.rangeSampler("minMax:2").withTags(TagSet.from(Map("minMax" -> "1", "env" -> "dev"))).distribution().sum should be(0)
       }
     }
 
     "measure the time spent in the execution of a method annotated with @Timer" in {
       for (id ← 1 to 1) Annotated(id).time()
 
-      Kamon.timer("time").distribution().count should be(1)
+      Kamon.timer("time").withoutTags().distribution().count should be(1)
     }
 
     "measure the time spent in the execution of a method annotated with @Timer and evaluate EL expressions" in {
       for (id ← 1 to 1) Annotated(id).timeWithEL()
 
-      Kamon.timer("time:1").refine(Map("slow-service" -> "service", "env" -> "prod")).distribution().count should be(1)
+      Kamon.timer("time:1").withTags(TagSet.from(Map("slow-service" -> "service", "env" -> "prod"))).distribution().count should be(1)
     }
 
     "record the operationName returned by a method annotated with @Histogram" in {
       for (operationName ← 1 to 5) Annotated().histogram(operationName)
 
-      val snapshot = Kamon.histogram("histogram").distribution()
+      val snapshot = Kamon.histogram("histogram").withoutTags().distribution()
       snapshot.count should be(5)
       snapshot.min should be(1)
       snapshot.max should be(5)
@@ -120,13 +122,13 @@ class AnnotationInstrumentationSpec extends WordSpec
     "record the operationName returned by a method annotated with @Histogram and evaluate EL expressions" in {
       for (operationName ← 1 to 2) Annotated(operationName).histogramWithEL(operationName)
 
-      val snapshot1 = Kamon.histogram("histogram:1").refine(Map("histogram" -> "hdr", "env" -> "prod")).distribution()
+      val snapshot1 = Kamon.histogram("histogram:1").withTags(TagSet.from(Map("histogram" -> "hdr", "env" -> "prod"))).distribution()
       snapshot1.count should be(1)
       snapshot1.min should be(1)
       snapshot1.max should be(1)
       snapshot1.sum should be(1)
 
-      val snapshot2 = Kamon.histogram("histogram:2").refine(Map("histogram" -> "hdr", "env" -> "prod")).distribution()
+      val snapshot2 = Kamon.histogram("histogram:2").withTags(TagSet.from(Map("histogram" -> "hdr", "env" -> "prod"))).distribution()
       snapshot2.count should be(1)
       snapshot2.min should be(2)
       snapshot2.max should be(2)
@@ -140,15 +142,15 @@ class AnnotationInstrumentationSpec extends WordSpec
   override protected def beforeAll(): Unit = {
     enableFastSpanFlushing()
     sampleAlways()
-    registration = Kamon.addReporter(reporter)
+    registration = Kamon.registerModule("test-module", reporter)
   }
 
   override protected def afterAll(): Unit = {
     registration.cancel()
   }
 
-  def stringTag(span: Span.FinishedSpan)(tag: String): String = {
-    span.tags(tag).asInstanceOf[TagValue.String].string
+  def stringTag(span: Span.Finished)(tag: String): String = {
+    span.tags.get(plain(tag))
   }
 }
 
@@ -158,8 +160,10 @@ case class Annotated(id: Long) {
 
   @SpanCustomizer(operationName = "customized-operation-name" )
   def traceWithSpanCustomizer(): Unit = {
-    val spanBuilder = Kamon.buildSpan("unknown").withTag("slow-service", "service").withTag("env", "prod")
-    Kamon.withSpan(Kamon.currentContext().get(kamon.trace.SpanCustomizer.ContextKey).customize(spanBuilder).start()) {
+    val spanBuilder = Kamon.spanBuilder("unknown").tag("slow-service", "service").tag("env", "prod").start()
+
+//    Kamon.withSpan(Kamon.currentContext().get(kamon.trace.SpanCustomizer.ContextKey).customize(spanBuilder).start()) {
+    Kamon.withSpan(spanBuilder) {
       customizeSpan()
     }
   }
@@ -193,15 +197,5 @@ case class Annotated(id: Long) {
 
 object Annotated {
   def apply(): Annotated = new Annotated(0L)
-}
-
-trait TimerMetricInspection extends MetricInspection{
-  implicit class TimerMetricSyntax(metric: kamon.metric.Timer) {
-    def distribution(resetState: Boolean = true): Distribution =
-      metric match {
-        case t: TimerImpl     => t.histogram.distribution(resetState)
-        case t: TimerMetricImpl     => t.underlyingHistogram.distribution(resetState)
-      }
-  }
 }
 

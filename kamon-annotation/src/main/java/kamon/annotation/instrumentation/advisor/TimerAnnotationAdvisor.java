@@ -29,14 +29,14 @@ public class TimerAnnotationAdvisor {
                              @Advice.Origin Method method,
                              @Advice.Origin("#t") String className,
                              @Advice.Origin("#m") String methodName,
-                             @Advice.Local("startedTimer") kamon.metric.StartedTimer startedTimer) {
+                             @Advice.Local("startedTimer") Timer.Started startedTimer) {
 
         final Timer timer = AnnotationCache.getTimer(method, obj, clazz, className, methodName);
         startedTimer = timer.start();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void end(@Advice.Local("startedTimer") kamon.metric.StartedTimer startedTimer) {
+    public static void end(@Advice.Local("startedTimer") Timer.Started startedTimer) {
         startedTimer.stop();
     }
 }

@@ -20,10 +20,11 @@ import kamon.Kamon;
 import kamon.annotation.el.StringEvaluator;
 import kamon.annotation.el.TagsEvaluator;
 import kamon.metric.*;
-import kamon.trace.Tracer;
-import scala.Some;
+import kamon.tag.TagSet;
+import kamon.trace.SpanBuilder;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,10 +36,10 @@ public class AnnotationCache {
         return (Gauge) metrics.computeIfAbsent(MetricKey.from("Gauge", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Gauge gaugeAnnotation = method.getAnnotation(kamon.annotation.api.Gauge.class);
             final String name = getOperationName(gaugeAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, String> tags = getTags(obj, clazz, gaugeAnnotation.tags());
+            final Map<String, Object> tags = getTags(obj, clazz, gaugeAnnotation.tags());
 
-            if (tags.isEmpty()) return Kamon.gauge(name);
-            else return Kamon.gauge(name).refine(tags);
+            if (tags.isEmpty()) return Kamon.gauge(name).withoutTags();
+            return Kamon.gauge(name).withTags(TagSet.from(tags));
         });
     }
 
@@ -46,10 +47,10 @@ public class AnnotationCache {
         return (Counter) metrics.computeIfAbsent(MetricKey.from("Counter", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Count countAnnotation = method.getAnnotation(kamon.annotation.api.Count.class);
             final String name = getOperationName(countAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, String> tags = getTags(obj, clazz, countAnnotation.tags());
+            final Map<String, Object> tags = getTags(obj, clazz, countAnnotation.tags());
 
-            if(tags.isEmpty()) return Kamon.counter(name);
-            else return Kamon.counter(name).refine(tags);
+            if(tags.isEmpty()) return Kamon.counter(name).withoutTags();
+            return Kamon.counter(name).withTags(TagSet.from(tags));
         });
     }
 
@@ -57,12 +58,12 @@ public class AnnotationCache {
         return (Histogram) metrics.computeIfAbsent(MetricKey.from("Histogram", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Histogram histogramAnnotation = method.getAnnotation(kamon.annotation.api.Histogram.class);
             final String name = getOperationName(histogramAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, String> tags = getTags(obj, clazz, histogramAnnotation.tags());
+            final Map<String, Object> tags = getTags(obj, clazz, histogramAnnotation.tags());
 
-            final HistogramMetric histogram = Kamon.histogram(name, MeasurementUnit.none(), new Some<>(new DynamicRange(histogramAnnotation.lowestDiscernibleValue(), histogramAnnotation.highestTrackableValue(), histogramAnnotation.precision())));
+            final Metric.Histogram histogram = Kamon.histogram(name, MeasurementUnit.none(), new DynamicRange(histogramAnnotation.lowestDiscernibleValue(), histogramAnnotation.highestTrackableValue(), histogramAnnotation.precision()));
 
-            if(tags.isEmpty()) return histogram;
-            else return histogram.refine(tags);
+            if(tags.isEmpty()) return histogram.withoutTags();
+            return histogram.withTags(TagSet.from(tags));
         });
     }
 
@@ -70,10 +71,10 @@ public class AnnotationCache {
         return (RangeSampler) metrics.computeIfAbsent(MetricKey.from("Sampler", method, obj, clazz), (key) -> {
             final kamon.annotation.api.RangeSampler rangeSamplerAnnotation = method.getAnnotation(kamon.annotation.api.RangeSampler.class);
             final String name = getOperationName(rangeSamplerAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, String> tags = getTags(obj, clazz, rangeSamplerAnnotation.tags());
+            final Map<String, Object> tags = getTags(obj, clazz, rangeSamplerAnnotation.tags());
 
-            if(tags.isEmpty())return Kamon.rangeSampler(name);
-            else return Kamon.rangeSampler(name).refine(tags);
+            if(tags.isEmpty())return Kamon.rangeSampler(name).withoutTags();
+            return Kamon.rangeSampler(name).withTags(TagSet.from(tags));
         });
     }
 
@@ -81,27 +82,29 @@ public class AnnotationCache {
         return (Timer) metrics.computeIfAbsent(MetricKey.from("Timer", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Timer timeAnnotation = method.getAnnotation(kamon.annotation.api.Timer.class);
             final String name = getOperationName(timeAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, String> tags = getTags(obj, clazz, timeAnnotation.tags());
+            final Map<String, Object> tags = getTags(obj, clazz, timeAnnotation.tags());
 
-            if(tags.isEmpty()) return Kamon.timer(name);
-            else return Kamon.timer(name).refine(tags);
+
+            if(tags.isEmpty()) return Kamon.timer(name).withoutTags();
+            return Kamon.timer(name).withTags(TagSet.from(tags));
         });
     }
 
-    public static Tracer.SpanBuilder getSpanBuilder(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Tracer.SpanBuilder) metrics.computeIfAbsent(MetricKey.from("Trace", method, obj, clazz), (key) -> {
+    public static SpanBuilder getSpanBuilder(Method method, Object obj, Class<?> clazz, String className, String methodName) {
+        return (SpanBuilder) metrics.computeIfAbsent(MetricKey.from("Trace", method, obj, clazz), (key) -> {
             final kamon.annotation.api.Trace traceAnnotation = method.getAnnotation(kamon.annotation.api.Trace.class);
             final String operationName = getOperationName(traceAnnotation.operationName(), obj, clazz, className, methodName);
-            final Map<String, String> tags = getTags(obj, clazz, traceAnnotation.tags());
-            final Tracer.SpanBuilder builder = Kamon.buildSpan(operationName);
-            tags.forEach(builder::withTag);
+            final Map<String, Object> tags = getTags(obj, clazz, traceAnnotation.tags());
+            final SpanBuilder builder = Kamon.spanBuilder(operationName);
+            tags.forEach((k, v)-> builder.tag(k, v.toString()));
 
             return builder;
         });
     }
 
-    private static Map<String, String> getTags(Object obj, Class<?> clazz, String tags) {
-        return (obj != null) ? TagsEvaluator.eval(obj, tags) : TagsEvaluator.eval(clazz, tags);
+    private static  Map<String, Object> getTags(Object obj, Class<?> clazz, String tags) {
+        final Map<String, String> tagMap = (obj != null) ? TagsEvaluator.eval(obj, tags) : TagsEvaluator.eval(clazz, tags);
+        return Collections.unmodifiableMap(tagMap);
     }
 
     private static String getOperationName(String name, Object obj, Class<?> clazz, String className, String methodName) {
@@ -130,7 +133,7 @@ public class AnnotationCache {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            MetricKey metricKey = (MetricKey) o;
+            final MetricKey metricKey = (MetricKey) o;
             return Objects.equals(prefix, metricKey.prefix) &&
                    Objects.equals(method, metricKey.method) &&
                    Objects.equals(instance, metricKey.instance) &&

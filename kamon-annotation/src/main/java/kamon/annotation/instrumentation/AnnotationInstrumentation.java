@@ -1,6 +1,6 @@
 /*
  * =========================================================================================
- * Copyright © 2013-2018 the kamon project <http://kamon.io/>
+ * Copyright © 2013-2019 the kamon project <http://kamon.io/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -17,43 +17,32 @@
 package kamon.annotation.instrumentation;
 
 import kamon.annotation.instrumentation.advisor.*;
-import kanela.agent.api.instrumentation.KanelaInstrumentation;
+import kanela.agent.api.instrumentation.InstrumentationBuilder;
 
-public class AnnotationInstrumentation extends KanelaInstrumentation {
+import static kanela.agent.libs.net.bytebuddy.matcher.ElementMatchers.*;
+
+public class AnnotationInstrumentation extends InstrumentationBuilder {
     public AnnotationInstrumentation() {
-        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Trace", (builder, annotatedMethods) ->
-                builder
-                    .withAdvisorFor(annotatedMethods, () -> TraceAnnotationAdvisor.class)
-                    .build());
 
-        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.SpanCustomizer", (builder, annotatedMethods) ->
-                builder
-                        .withAdvisorFor(annotatedMethods, () -> SpanCustomizerAnnotationAdvisor.class)
-                        .build());
+        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Trace")
+                .advise(isAnnotatedWith(named("kamon.annotation.api.Trace")), TraceAnnotationAdvisor.class);
 
-        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Count", (builder, annotatedMethods) ->
-                builder
-                    .withAdvisorFor(annotatedMethods, () -> CountAnnotationAdvisor.class)
-                    .build());
+        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.SpanCustomizer")
+                .advise(isAnnotatedWith(named("kamon.annotation.api.SpanCustomizer")), SpanCustomizerAnnotationAdvisor.class);
 
-        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.RangeSampler", (builder, annotatedMethods) ->
-                builder
-                    .withAdvisorFor(annotatedMethods, () -> RangeSamplerAnnotationAdvisor.class)
-                    .build());
+        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Count")
+                .advise(isAnnotatedWith(named("kamon.annotation.api.Count")), CountAnnotationAdvisor.class);
 
-        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Timer", (builder, annotatedMethods) ->
-                builder
-                    .withAdvisorFor(annotatedMethods, () -> TimerAnnotationAdvisor.class)
-                    .build());
+        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.RangeSampler")
+                .advise(isAnnotatedWith(named("kamon.annotation.api.RangeSampler")), RangeSamplerAnnotationAdvisor.class);
 
-        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Histogram", (builder, annotatedMethods) ->
-                builder
-                    .withAdvisorFor(annotatedMethods.and(withReturnTypes(long.class, double.class, int.class, float.class)), () -> HistogramAnnotationAdvisor.class)
-                    .build());
+        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Timer")
+                .advise(isAnnotatedWith(named("kamon.annotation.api.Timer")), TimerAnnotationAdvisor.class);
 
-        forTypesWithMethodsAnnotatedWith(() -> "kamon.annotation.api.Gauge", (builder, annotatedMethods) ->
-                builder
-                    .withAdvisorFor(annotatedMethods.and(withReturnTypes(long.class, double.class, int.class, float.class)), () -> GaugeAnnotationAdvisor.class)
-                    .build());
+        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Histogram")
+                .advise(isAnnotatedWith(named("kamon.annotation.api.Histogram")).and(withReturnTypes(long.class, double.class, int.class, float.class)),HistogramAnnotationAdvisor.class);
+
+        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Gauge")
+                .advise(isAnnotatedWith(named("kamon.annotation.api.Gauge")).and(withReturnTypes(long.class, double.class, int.class, float.class)), GaugeAnnotationAdvisor.class);
     }
 }

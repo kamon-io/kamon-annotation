@@ -19,18 +19,17 @@ package kamon.annotation.instrumentation.advisor;
 import kamon.Kamon;
 import kamon.annotation.api.SpanCustomizer;
 import kamon.context.Storage;
-import kamon.trace.SpanCustomizer$;
 import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
 import java.lang.reflect.Method;
 
-public class SpanCustomizerAnnotationAdvisor {
+public final class SpanCustomizerAnnotationAdvisor {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Origin Method method,
                                @Advice.Local("scope") Storage.Scope scope) {
 
         final SpanCustomizer annotation = method.getAnnotation(SpanCustomizer.class);
-        scope = Kamon.storeContext(Kamon.currentContext().withKey(SpanCustomizer$.MODULE$.ContextKey(), SpanCustomizer$.MODULE$.forOperationName(annotation.operationName())));
+        scope = Kamon.storeContext(Kamon.currentContext().withKey(kamon.annotation.util.Hooks.key(), kamon.annotation.util.Hooks.updateOperationName(annotation.operationName())));
     }
 
     @Advice.OnMethodExit

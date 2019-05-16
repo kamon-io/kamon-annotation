@@ -32,6 +32,6 @@ public class GaugeAnnotationAdvisor extends AnnotationCache {
                            @Advice.Return Object result) {
 
         final Gauge gauge = AnnotationCache.getGauge(method, obj, clazz, className, methodName);
-        gauge.set(((Number) result).longValue());
+        gauge.update(((Number) result).longValue());
     }
 }

@@ -17,10 +17,11 @@
 package kamon.annotation
 
 import kamon.Kamon
-import kamon.testkit.{MetricInspection, Reconfigure, TestSpanReporter}
+import kamon.module.Module.Registration
+import kamon.tag.Lookups._
+import kamon.tag.TagSet
+import kamon.testkit._
 import kamon.trace.Span
-import kamon.trace.Span.TagValue
-import kamon.util.Registration
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.SpanSugar
 import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpec}
@@ -30,9 +31,10 @@ class StaticAnnotationInstrumentationJavaSpec extends WordSpec
   with Eventually
   with SpanSugar
   with Reconfigure
-  with MetricInspection
+  with InstrumentInspection.Syntax
+  with SpanInspection
+  with MetricInspection.Syntax
   with BeforeAndAfterAll
-  with TimerMetricInspection
   with OptionValues {
 
   "the Kamon Annotation module" should {
@@ -51,20 +53,20 @@ class StaticAnnotationInstrumentationJavaSpec extends WordSpec
     "count the invocations of a static method annotated with @Count" in {
       for (_ ← 1 to 10) AnnotatedJavaClass.count()
 
-      Kamon.counter("count").value() should be(10)
+      Kamon.counter("count").withoutTags().value() should be(10)
     }
 
     "count the invocations of a static method annotated with @Count and evaluate EL expressions" in {
       for (_ ← 1 to 2) AnnotatedJavaClass.countWithEL()
 
-      Kamon.counter("count:10").refine(Map("counter" -> "1", "env" -> "prod")).value()should be(2)
+      Kamon.counter("count:10").withTags(TagSet.from(Map("counter" -> "1", "env" -> "prod"))).value()should be(2)
     }
 
     "count the current invocations of a static method annotated with @RangeSampler" in {
       for (_ ← 1 to 10) AnnotatedJavaClass.countMinMax()
 
       eventually(timeout(5 seconds)) {
-        Kamon.rangeSampler("minMax").distribution().max should be(0)
+        Kamon.rangeSampler("minMax").withoutTags().distribution().max should be(0)
       }
     }
 
@@ -72,26 +74,26 @@ class StaticAnnotationInstrumentationJavaSpec extends WordSpec
       for (_ ← 1 to 10) AnnotatedJavaClass.countMinMaxWithEL()
 
       eventually(timeout(5 seconds)) {
-        Kamon.rangeSampler("minMax:10").refine(Map("minMax" -> "1", "env" -> "dev")).distribution().sum should be(0)
+        Kamon.rangeSampler("minMax:10").withTags(TagSet.from(Map("minMax" -> "1", "env" -> "dev"))).distribution().sum should be(0)
       }
     }
 
     "measure the time spent in the execution of a static method annotated with @Timer" in {
       for (_ ← 1 to 1) AnnotatedJavaClass.time()
 
-      Kamon.timer("time").distribution().count should be(1)
+      Kamon.timer("time").withoutTags().distribution().count should be(1)
     }
 
     "measure the time spent in the execution of a static method annotated with @Timer and evaluate EL expressions" in {
       for (_ ← 1 to 1) AnnotatedJavaClass.timeWithEL()
 
-      Kamon.timer("time:10").refine(Map("slow-service" -> "service", "env" -> "prod")).distribution().count should be(1)
+      Kamon.timer("time:10").withTags(TagSet.from(Map("slow-service" -> "service", "env" -> "prod"))).distribution().count should be(1)
     }
 
     "record the operationName returned by a static method annotated with @Histogram" in {
       for (operationName ← 1 to 5) AnnotatedJavaClass.histogram(operationName.toLong)
 
-      val snapshot = Kamon.histogram("histogram").distribution()
+      val snapshot = Kamon.histogram("histogram").withoutTags().distribution()
       snapshot.count should be(5)
       snapshot.min should be(1)
       snapshot.max should be(5)
@@ -101,7 +103,7 @@ class StaticAnnotationInstrumentationJavaSpec extends WordSpec
     "record the operationName returned by a static method annotated with @Histogram and evaluate EL expressions" in {
       for (operationName ← 1 to 2) AnnotatedJavaClass.histogramWithEL(operationName.toLong)
 
-      val snapshot = Kamon.histogram("histogram:10").refine(Map("histogram" -> "hdr", "env" -> "prod")).distribution()
+      val snapshot = Kamon.histogram("histogram:10").withTags(TagSet.from(Map("histogram" -> "hdr", "env" -> "prod"))).distribution()
       snapshot.count should be(2)
       snapshot.min should be(1)
       snapshot.max should be(2)
@@ -114,14 +116,14 @@ class StaticAnnotationInstrumentationJavaSpec extends WordSpec
   override protected def beforeAll(): Unit = {
     enableFastSpanFlushing()
     sampleAlways()
-    registration = Kamon.addReporter(reporter)
+    registration = Kamon.registerModule("test-reporter", reporter)
   }
 
   override protected def afterAll(): Unit = {
     registration.cancel()
   }
 
-  def stringTag(span: Span.FinishedSpan)(tag: String): String = {
-    span.tags(tag).asInstanceOf[TagValue.String].string
+  def stringTag(span: Span.Finished)(tag: String): String = {
+    span.tags.get(plain(tag))
   }
 }
