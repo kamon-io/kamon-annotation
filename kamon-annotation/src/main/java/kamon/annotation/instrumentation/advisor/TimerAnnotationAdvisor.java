@@ -22,7 +22,7 @@ import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
 import java.lang.reflect.Method;
 
-public class TimerAnnotationAdvisor {
+public final class TimerAnnotationAdvisor {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void start(@Advice.This(optional = true) Object obj,
                              @Advice.Origin Class<?> clazz,

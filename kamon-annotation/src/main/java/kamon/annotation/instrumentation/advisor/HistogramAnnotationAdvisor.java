@@ -22,7 +22,7 @@ import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
 import java.lang.reflect.Method;
 
-public class HistogramAnnotationAdvisor {
+public final class HistogramAnnotationAdvisor {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void record(@Advice.This(optional = true) Object obj,
                               @Advice.Origin Class<?> clazz,

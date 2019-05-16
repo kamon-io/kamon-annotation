@@ -21,28 +21,37 @@ import kanela.agent.api.instrumentation.InstrumentationBuilder;
 
 import static kanela.agent.libs.net.bytebuddy.matcher.ElementMatchers.*;
 
-public class AnnotationInstrumentation extends InstrumentationBuilder {
+public final class AnnotationInstrumentation extends InstrumentationBuilder {
+
+    private static final String Trace = "kamon.annotation.api.Trace";
+    private static final String SpanCustomizer = "kamon.annotation.api.SpanCustomizer";
+    private static final String Count = "kamon.annotation.api.Count";
+    private static final String RangeSampler = "kamon.annotation.api.RangeSampler";
+    private static final String Timer = "kamon.annotation.api.Timer";
+    private static final String Histogram = "kamon.annotation.api.Histogram";
+    private static final String Gauge = "kamon.annotation.api.Gauge";
+
     public AnnotationInstrumentation() {
 
-        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Trace")
-                .advise(isAnnotatedWith(named("kamon.annotation.api.Trace")), TraceAnnotationAdvisor.class);
+        onTypesWithMethodsAnnotatedWith(Trace)
+                .advise(isAnnotatedWith(named(Trace)), TraceAnnotationAdvisor.class);
 
-        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.SpanCustomizer")
-                .advise(isAnnotatedWith(named("kamon.annotation.api.SpanCustomizer")), SpanCustomizerAnnotationAdvisor.class);
+        onTypesWithMethodsAnnotatedWith(SpanCustomizer)
+                .advise(isAnnotatedWith(named(SpanCustomizer)), SpanCustomizerAnnotationAdvisor.class);
 
-        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Count")
-                .advise(isAnnotatedWith(named("kamon.annotation.api.Count")), CountAnnotationAdvisor.class);
+        onTypesWithMethodsAnnotatedWith(Count)
+                .advise(isAnnotatedWith(named(Count)), CountAnnotationAdvisor.class);
 
-        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.RangeSampler")
-                .advise(isAnnotatedWith(named("kamon.annotation.api.RangeSampler")), RangeSamplerAnnotationAdvisor.class);
+        onTypesWithMethodsAnnotatedWith(RangeSampler)
+                .advise(isAnnotatedWith(named(RangeSampler)), RangeSamplerAnnotationAdvisor.class);
 
-        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Timer")
-                .advise(isAnnotatedWith(named("kamon.annotation.api.Timer")), TimerAnnotationAdvisor.class);
+        onTypesWithMethodsAnnotatedWith(Timer)
+                .advise(isAnnotatedWith(named(Timer)), TimerAnnotationAdvisor.class);
 
-        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Histogram")
-                .advise(isAnnotatedWith(named("kamon.annotation.api.Histogram")).and(withReturnTypes(long.class, double.class, int.class, float.class)),HistogramAnnotationAdvisor.class);
+        onTypesWithMethodsAnnotatedWith(Histogram)
+                .advise(isAnnotatedWith(named(Histogram)).and(withReturnTypes(long.class, double.class, int.class, float.class)),HistogramAnnotationAdvisor.class);
 
-        onTypesWithMethodsAnnotatedWith("kamon.annotation.api.Gauge")
-                .advise(isAnnotatedWith(named("kamon.annotation.api.Gauge")).and(withReturnTypes(long.class, double.class, int.class, float.class)), GaugeAnnotationAdvisor.class);
+        onTypesWithMethodsAnnotatedWith(Gauge)
+                .advise(isAnnotatedWith(named(Gauge)).and(withReturnTypes(long.class, double.class, int.class, float.class)), GaugeAnnotationAdvisor.class);
     }
 }

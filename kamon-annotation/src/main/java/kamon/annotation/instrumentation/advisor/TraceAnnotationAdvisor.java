@@ -25,7 +25,7 @@ import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
 import java.lang.reflect.Method;
 
-public class TraceAnnotationAdvisor {
+public final class TraceAnnotationAdvisor {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startSpan(@Advice.This(optional = true) Object obj,
                                  @Advice.Origin Class<?> clazz,

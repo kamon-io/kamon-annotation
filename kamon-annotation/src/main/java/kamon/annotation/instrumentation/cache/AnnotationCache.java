@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AnnotationCache {
+public final  class AnnotationCache {
     private final static Map<MetricKey, Object> metrics = new ConcurrentHashMap<>();
 
     public static Gauge getGauge(Method method, Object obj, Class<?> clazz, String className, String methodName) {

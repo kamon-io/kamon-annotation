@@ -22,7 +22,7 @@ import kanela.agent.libs.net.bytebuddy.asm.Advice;
 
 import java.lang.reflect.Method;
 
-public class GaugeAnnotationAdvisor extends AnnotationCache {
+public final class GaugeAnnotationAdvisor  {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void set(@Advice.This(optional = true) Object obj,
                            @Advice.Origin Class<?> clazz,
