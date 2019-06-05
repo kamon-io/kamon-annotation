@@ -39,7 +39,6 @@ object EnhancedELProcessor {
           Logger.warn(new Supplier[String] {
             override def get(): String =  s"${cause.getMessage} -> we will complete the operation with 'unknown' string"
           }, cause)
-//          Logger.warn(() => s"${cause.getMessage} -> we will complete the operation with 'unknown' string")
           "unknown"
       }
     } getOrElse expression
@@ -48,7 +47,6 @@ object EnhancedELProcessor {
       eval[java.util.HashMap[String, String]](s"{$str}") match {
         case Success(value) ⇒ value.asInstanceOf[java.util.HashMap[String, String]].asScala.toMap
         case Failure(cause) ⇒
-//          Logger.warn(() => s"${cause.getMessage} -> we will complete the operation with an empty map")
           Logger.warn(new Supplier[String] {
             override def get(): String =  s"${cause.getMessage} -> we will complete the operation with an empty map"
           }, cause)
