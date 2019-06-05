@@ -162,7 +162,6 @@ case class Annotated(id: Long) {
   def traceWithSpanCustomizer(): Unit = {
     val spanBuilder = Kamon.spanBuilder("unknown").tag("slow-service", "service").tag("env", "prod").start()
 
-//    Kamon.withSpan(Kamon.currentContext().get(kamon.trace.SpanCustomizer.ContextKey).customize(spanBuilder).start()) {
     Kamon.storeSpan(spanBuilder) {
       customizeSpan()
     }
