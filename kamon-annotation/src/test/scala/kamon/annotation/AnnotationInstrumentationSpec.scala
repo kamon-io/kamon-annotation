@@ -16,7 +16,7 @@
 
 package kamon.annotation
 
-import kamon.Kamon
+import kamon.{Kamon, testkit}
 import kamon.annotation.api._
 import kamon.metric.{Histogram => _, RangeSampler => _, Timer => _, _}
 import kamon.module.Module.Registration
@@ -137,7 +137,7 @@ class AnnotationInstrumentationSpec extends WordSpec
   }
 
   @volatile var registration: Registration = _
-  val reporter = new TestSpanReporter()
+  val reporter = new testkit.TestSpanReporter.BufferingSpanReporter()
 
   override protected def beforeAll(): Unit = {
     enableFastSpanFlushing()
@@ -163,7 +163,7 @@ case class Annotated(id: Long) {
     val spanBuilder = Kamon.spanBuilder("unknown").tag("slow-service", "service").tag("env", "prod").start()
 
 //    Kamon.withSpan(Kamon.currentContext().get(kamon.trace.SpanCustomizer.ContextKey).customize(spanBuilder).start()) {
-    Kamon.withSpan(spanBuilder) {
+    Kamon.storeSpan(spanBuilder) {
       customizeSpan()
     }
   }

@@ -13,8 +13,9 @@
  * =========================================================================================
  */
 
-val kamonCore       = "io.kamon"      %% "kamon-core"     % "2.0.0-7dd537de1b5654d5f0d019f076edccb757775f4d"
-val kamonTestkit    = "io.kamon"      %% "kamon-testkit"  % "2.0.0-7dd537de1b5654d5f0d019f076edccb757775f4d"
+val kamonCore       = "io.kamon"      %% "kamon-core"     % "2.0.0-M5"
+val kamonTestkit    = "io.kamon"      %% "kamon-testkit"  % "2.0.0-M5"
+val el              = "org.glassfish" % "javax.el" % "3.0.1-b11"
 
 lazy val root = (project in file("."))
   .settings(noPublishing: _*)
@@ -22,10 +23,15 @@ lazy val root = (project in file("."))
 
 val commonSettings = Seq(
     scalaVersion := "2.12.8",
-    isSnapshot := false,
     resolvers += Resolver.mavenLocal,
-    resolvers += Resolver.bintrayRepo("kamon-io", "snapshots"),
-    crossScalaVersions := Seq("2.12.8", "2.11.12", "2.10.7"))
+//    resolvers += Resolver.bintrayRepo("kamon-io", "snapshots"),
+    crossScalaVersions := Seq("2.12.8", "2.11.12"),
+    assembleArtifact in assemblyPackageScala := false,
+    assemblyMergeStrategy in assembly := {
+        case s if s.startsWith("LICENSE") => MergeStrategy.discard
+        case s if s.startsWith("about") => MergeStrategy.discard
+        case x => (assemblyMergeStrategy in assembly).value(x)
+    })
 
 lazy val annotationApi = (project in file("kamon-annotation-api"))
   .settings(moduleName := "kamon-annotation-api", resolvers += Resolver.mavenLocal)
@@ -36,12 +42,22 @@ lazy val annotationApi = (project in file("kamon-annotation-api"))
 
 lazy val annotation = (project in file("kamon-annotation"))
   .enablePlugins(JavaAgent)
+  .enablePlugins(AssemblyPlugin)
   .settings(moduleName := "kamon-annotation")
   .settings(commonSettings: _*)
-  .settings(javaAgents += "io.kamon"  % "kanela-agent"  % "1.0.0-M27"  % "compile;test")
+  .settings(javaAgents += "io.kamon"  % "kanela-agent"  % "1.0.0-M3"  % "compile;test")
   .settings(
-      libraryDependencies ++=
-        compileScope(kamonCore) ++
-          testScope(scalatest, logbackClassic, kamonTestkit)
+      packageBin in Compile := assembly.value,
+      assemblyExcludedJars in assembly := filterOut((fullClasspath in assembly).value, "slf4j-api", "config", "kamon-core"),
+      assemblyShadeRules in assembly := Seq(
+      ShadeRule.rename("javax.el.**"    -> "kamon.lib.@0").inAll,
+      ShadeRule.rename("com.sun.el.**"    -> "kamon.lib.@0").inAll,
+    ),
+    libraryDependencies ++=
+      compileScope(kamonCore, el) ++
+      testScope(scalatest, logbackClassic, kamonTestkit)
   ).dependsOn(annotationApi)
 
+def filterOut(classPath: Classpath, patterns: String*): Classpath = {
+    classPath filter { file => patterns.exists(file.data.getPath.contains(_))}
+}

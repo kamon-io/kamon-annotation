@@ -16,8 +16,8 @@
 
 package kamon.annotation.el
 
+import javax.el.ELProcessor
 import kamon.annotation.el.resolver.PrivateFieldELResolver
-import shaded.javax.el.ELProcessor
 
 object ELProcessorFactory {
   def withClass(clazz: Class[_]): ELProcessor = {

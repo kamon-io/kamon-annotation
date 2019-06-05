@@ -16,10 +16,10 @@
 
 package kamon.annotation.el.resolver;
 
-import shaded.javax.el.ELContext;
-import shaded.javax.el.ELException;
-import shaded.javax.el.ELResolver;
 
+import javax.el.ELContext;
+import javax.el.ELException;
+import javax.el.ELResolver;
 import java.beans.FeatureDescriptor;
 import java.lang.reflect.Field;
 import java.util.Iterator;

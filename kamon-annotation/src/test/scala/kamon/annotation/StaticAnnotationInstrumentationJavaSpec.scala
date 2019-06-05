@@ -16,7 +16,7 @@
 
 package kamon.annotation
 
-import kamon.Kamon
+import kamon.{Kamon, testkit}
 import kamon.module.Module.Registration
 import kamon.tag.Lookups._
 import kamon.tag.TagSet
@@ -111,7 +111,7 @@ class StaticAnnotationInstrumentationJavaSpec extends WordSpec
   }
 
   @volatile var registration: Registration = _
-  val reporter = new TestSpanReporter()
+  val reporter = new testkit.TestSpanReporter.BufferingSpanReporter()
 
   override protected def beforeAll(): Unit = {
     enableFastSpanFlushing()
