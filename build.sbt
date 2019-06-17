@@ -15,7 +15,8 @@
 
 val kamonCore       = "io.kamon"      %% "kamon-core"     % "2.0.0-M5"
 val kamonTestkit    = "io.kamon"      %% "kamon-testkit"  % "2.0.0-M5"
-val el              = "org.glassfish" % "javax.el" % "3.0.1-b11"
+
+val el              = "org.glassfish" % "javax.el"        % "3.0.1-b11"
 
 lazy val root = (project in file("."))
   .settings(noPublishing: _*)

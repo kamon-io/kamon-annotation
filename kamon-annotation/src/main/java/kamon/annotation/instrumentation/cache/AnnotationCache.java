@@ -33,16 +33,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public final  class AnnotationCache {
+public final class AnnotationCache {
 
     private static Map<MetricKey, Object> metrics = buildCache();
 
     private static Map<MetricKey, Object> buildCache() {
-        return  ExpiringMap
+        return ExpiringMap
                 .builder()
                 .expiration(1, TimeUnit.MINUTES)
                 .expirationPolicy(ExpirationPolicy.ACCESSED)
-                .asyncExpirationListener(LogExpirationListener())
+                .asyncExpirationListener(ExpirationListener())
                 .build();
     }
 
@@ -126,8 +126,7 @@ public final  class AnnotationCache {
         return (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
     }
 
-
-    private static ExpirationListener<MetricKey, Object> LogExpirationListener() {
+    private static ExpirationListener<MetricKey, Object> ExpirationListener() {
         return (key, value) ->   {
             if(value instanceof Instrument) ((Instrument) value).remove();
             Logger.debug(() -> "Expiring key: " + key + "with value" + value);
