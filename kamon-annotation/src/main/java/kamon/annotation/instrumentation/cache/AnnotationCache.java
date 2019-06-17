@@ -1,6 +1,6 @@
 /*
  * =========================================================================================
- * Copyright © 2013-2018 the kamon project <http://kamon.io/>
+ * Copyright © 2013-2019 the kamon project <http://kamon.io/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -22,15 +22,29 @@ import kamon.annotation.el.TagsEvaluator;
 import kamon.metric.*;
 import kamon.tag.TagSet;
 import kamon.trace.SpanBuilder;
+import kanela.agent.libs.net.jodah.expiringmap.ExpirationListener;
+import kanela.agent.libs.net.jodah.expiringmap.ExpirationPolicy;
+import kanela.agent.libs.net.jodah.expiringmap.ExpiringMap;
+import kanela.agent.util.log.Logger;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public final  class AnnotationCache {
-    private final static Map<MetricKey, Object> metrics = new ConcurrentHashMap<>();
+
+    private static Map<MetricKey, Object> metrics = buildCache();
+
+    private static Map<MetricKey, Object> buildCache() {
+        return  ExpiringMap
+                .builder()
+                .expiration(1, TimeUnit.MINUTES)
+                .expirationPolicy(ExpirationPolicy.ACCESSED)
+                .asyncExpirationListener(LogExpirationListener())
+                .build();
+    }
 
     public static Gauge getGauge(Method method, Object obj, Class<?> clazz, String className, String methodName) {
         return (Gauge) metrics.computeIfAbsent(MetricKey.from("Gauge", method, obj, clazz), (key) -> {
@@ -110,6 +124,14 @@ public final  class AnnotationCache {
     private static String getOperationName(String name, Object obj, Class<?> clazz, String className, String methodName) {
         final String evaluatedString = (obj != null) ? StringEvaluator.evaluate(obj, name) : StringEvaluator.evaluate(clazz, name);
         return (evaluatedString.isEmpty() || evaluatedString.equals("unknown")) ? className + "." + methodName: evaluatedString;
+    }
+
+
+    private static ExpirationListener<MetricKey, Object> LogExpirationListener() {
+        return (key, value) ->   {
+            if(value instanceof Instrument) ((Instrument) value).remove();
+            Logger.debug(() -> "Expiring key: " + key + "with value" + value);
+        };
     }
 
     private static class MetricKey {

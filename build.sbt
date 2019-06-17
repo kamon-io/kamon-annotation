@@ -24,7 +24,6 @@ lazy val root = (project in file("."))
 val commonSettings = Seq(
     scalaVersion := "2.12.8",
     resolvers += Resolver.mavenLocal,
-//    resolvers += Resolver.bintrayRepo("kamon-io", "snapshots"),
     crossScalaVersions := Seq("2.12.8", "2.11.12"),
     assembleArtifact in assemblyPackageScala := false,
     assemblyMergeStrategy in assembly := {
