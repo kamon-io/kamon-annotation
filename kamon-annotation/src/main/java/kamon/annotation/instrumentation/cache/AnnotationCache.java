@@ -29,92 +29,187 @@ import kanela.agent.util.log.Logger;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public final class AnnotationCache {
 
-    private static Map<MetricKey, Object> metrics = buildCache();
+    private static Map<MetricKey, MetricContainer> metrics = buildCache();
 
-    private static Map<MetricKey, Object> buildCache() {
+    private static Map<MetricKey, MetricContainer> buildCache() {
         return ExpiringMap
                 .builder()
                 .expiration(1, TimeUnit.MINUTES)
                 .expirationPolicy(ExpirationPolicy.ACCESSED)
+                .entryLoader((key) -> new MetricContainer())
                 .asyncExpirationListener(ExpirationListener())
                 .build();
     }
 
     public static Gauge getGauge(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Gauge) metrics.computeIfAbsent(MetricKey.from("Gauge", method, obj, clazz), (key) -> {
-            final kamon.annotation.api.Gauge gaugeAnnotation = method.getAnnotation(kamon.annotation.api.Gauge.class);
-            final String name = getOperationName(gaugeAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, Object> tags = getTags(obj, clazz, gaugeAnnotation.tags());
+        final MetricKey metricKey = MetricKey.from("Gauge", method, clazz);
+        final kamon.annotation.api.Gauge gaugeAnnotation = method.getAnnotation(kamon.annotation.api.Gauge.class);
+        final String operationName = gaugeAnnotation.name();
+        final String traceTags = gaugeAnnotation.tags();
+        final boolean containsELExpression = isEL(operationName) || isEL(traceTags);
 
-            if (tags.isEmpty()) return Kamon.gauge(name).withoutTags();
-            return Kamon.gauge(name).withTags(TagSet.from(tags));
+        final MetricContainer metricContainer = metrics.computeIfPresent(metricKey, (kk, container) -> {
+            if(containsELExpression) {
+                container.cache.computeIfAbsent(obj, (x) -> {
+                    final String name = getOperationName(operationName, obj, clazz, className, methodName);
+                    final Map<String, Object> tags = getTags(obj, clazz, traceTags);
+                    if (tags.isEmpty()) return Kamon.gauge(name).withoutTags();
+                    return Kamon.gauge(name).withTags(TagSet.from(tags));
+                });
+                return container;
+            }
+            container.metric = Kamon.counter(operationName).withoutTags();
+            return container;
         });
+
+        if(containsELExpression) return (Gauge) metricContainer.cache.get(obj);
+        return (Gauge) metricContainer.metric;
     }
+
 
     public static Counter getCounter(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Counter) metrics.computeIfAbsent(MetricKey.from("Counter", method, obj, clazz), (key) -> {
-            final kamon.annotation.api.Count countAnnotation = method.getAnnotation(kamon.annotation.api.Count.class);
-            final String name = getOperationName(countAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, Object> tags = getTags(obj, clazz, countAnnotation.tags());
+        final MetricKey metricKey = MetricKey.from("Counter", method, clazz);
+        final kamon.annotation.api.Count countAnnotation = method.getAnnotation(kamon.annotation.api.Count.class);
+        final String operationName = countAnnotation.name();
+        final String traceTags = countAnnotation.tags();
+        final boolean containsELExpression = isEL(operationName) || isEL(traceTags);
 
-            if(tags.isEmpty()) return Kamon.counter(name).withoutTags();
-            return Kamon.counter(name).withTags(TagSet.from(tags));
+        final MetricContainer metricContainer = metrics.computeIfPresent(metricKey, (kk, container) -> {
+            if(containsELExpression) {
+                container.cache.computeIfAbsent(obj, (x) -> {
+                    final String name = getOperationName(operationName, obj, clazz, className, methodName);
+                    final Map<String, Object> tags = getTags(obj, clazz, traceTags);
+                    if(tags.isEmpty()) return Kamon.counter(name).withoutTags();
+                    return Kamon.counter(name).withTags(TagSet.from(tags));
+                });
+                return container;
+            }
+            container.metric = Kamon.counter(operationName).withoutTags();
+            return container;
         });
+
+        if(containsELExpression) return (Counter) metricContainer.cache.get(obj);
+        return (Counter) metricContainer.metric;
     }
 
+
     public static Histogram getHistogram(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Histogram) metrics.computeIfAbsent(MetricKey.from("Histogram", method, obj, clazz), (key) -> {
-            final kamon.annotation.api.Histogram histogramAnnotation = method.getAnnotation(kamon.annotation.api.Histogram.class);
-            final String name = getOperationName(histogramAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, Object> tags = getTags(obj, clazz, histogramAnnotation.tags());
+        final MetricKey metricKey = MetricKey.from("Histogram", method, clazz);
+        final kamon.annotation.api.Histogram histogramAnnotation = method.getAnnotation(kamon.annotation.api.Histogram.class);
+        final String operationName = histogramAnnotation.name();
+        final String traceTags = histogramAnnotation.tags();
+        final boolean containsELExpression = isEL(operationName) || isEL(traceTags);
 
-            final Metric.Histogram histogram = Kamon.histogram(name, MeasurementUnit.none(), new DynamicRange(histogramAnnotation.lowestDiscernibleValue(), histogramAnnotation.highestTrackableValue(), histogramAnnotation.precision()));
+        final MetricContainer metricContainer = metrics.computeIfPresent(metricKey, (kk, container) -> {
+            if(containsELExpression) {
+                container.cache.computeIfAbsent(obj, (x) -> {
+                    final String name = getOperationName(operationName, obj, clazz, className, methodName);
+                    final Metric.Histogram histogram = getHistogram(histogramAnnotation, name);
+                    final Map<String, Object> tags = getTags(obj, clazz, traceTags);
 
-            if(tags.isEmpty()) return histogram.withoutTags();
-            return histogram.withTags(TagSet.from(tags));
+                    if(tags.isEmpty()) return histogram.withoutTags();
+                    return histogram.withTags(TagSet.from(tags));
+                });
+                return container;
+            }
+            final Metric.Histogram histogram = getHistogram(histogramAnnotation, operationName);
+            container.metric = histogram.withoutTags();
+            return container;
         });
+
+        if(containsELExpression) return (Histogram) metricContainer.cache.get(obj);
+        return (Histogram) metricContainer.metric;
     }
 
     public static RangeSampler getRangeSampler(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (RangeSampler) metrics.computeIfAbsent(MetricKey.from("Sampler", method, obj, clazz), (key) -> {
-            final kamon.annotation.api.RangeSampler rangeSamplerAnnotation = method.getAnnotation(kamon.annotation.api.RangeSampler.class);
-            final String name = getOperationName(rangeSamplerAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, Object> tags = getTags(obj, clazz, rangeSamplerAnnotation.tags());
+        final MetricKey metricKey = MetricKey.from("Sampler", method, clazz);
+        final kamon.annotation.api.RangeSampler rangeSamplerAnnotation = method.getAnnotation(kamon.annotation.api.RangeSampler.class);
+        final String operationName = rangeSamplerAnnotation.name();
+        final String traceTags = rangeSamplerAnnotation.tags();
+        final boolean containsELExpression = isEL(operationName) || isEL(traceTags);
 
-            if(tags.isEmpty())return Kamon.rangeSampler(name).withoutTags();
-            return Kamon.rangeSampler(name).withTags(TagSet.from(tags));
+        final MetricContainer metricContainer = metrics.computeIfPresent(metricKey, (kk, container) -> {
+            if(containsELExpression) {
+                container.cache.computeIfAbsent(obj, (x) -> {
+                    final String name = getOperationName(operationName, obj, clazz, className, methodName);
+                    final Map<String, Object> tags = getTags(obj, clazz, traceTags);
+                    if(tags.isEmpty()) return Kamon.rangeSampler(name).withoutTags();
+                    return Kamon.rangeSampler(name).withTags(TagSet.from(tags));
+                });
+                return container;
+            }
+            container.metric = Kamon.rangeSampler(operationName).withoutTags();
+            return container;
         });
+
+        if(containsELExpression) return (RangeSampler) metricContainer.cache.get(obj);
+        return (RangeSampler) metricContainer.metric;
     }
+
 
     public static Timer getTimer(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (Timer) metrics.computeIfAbsent(MetricKey.from("Timer", method, obj, clazz), (key) -> {
-            final kamon.annotation.api.Timer timeAnnotation = method.getAnnotation(kamon.annotation.api.Timer.class);
-            final String name = getOperationName(timeAnnotation.name(), obj, clazz, className, methodName);
-            final Map<String, Object> tags = getTags(obj, clazz, timeAnnotation.tags());
+        final MetricKey metricKey = MetricKey.from("Timer", method, clazz);
+        final kamon.annotation.api.Timer timerAnnotation = method.getAnnotation(kamon.annotation.api.Timer.class);
+        final String operationName = timerAnnotation.name();
+        final String traceTags = timerAnnotation.tags();
+        final boolean containsELExpression = isEL(operationName) || isEL(traceTags);
 
-
-            if(tags.isEmpty()) return Kamon.timer(name).withoutTags();
-            return Kamon.timer(name).withTags(TagSet.from(tags));
+        final MetricContainer metricContainer = metrics.computeIfPresent(metricKey, (kk, container) -> {
+            if(containsELExpression) {
+                container.cache.computeIfAbsent(obj, (x) -> {
+                    final String name = getOperationName(operationName, obj, clazz, className, methodName);
+                    final Map<String, Object> tags = getTags(obj, clazz, traceTags);
+                    if(tags.isEmpty()) return Kamon.timer(name).withoutTags();
+                    return Kamon.timer(name).withTags(TagSet.from(tags));
+                });
+                return container;
+            }
+            container.metric = Kamon.timer(operationName).withoutTags();
+            return container;
         });
+
+        if(containsELExpression) return (Timer) metricContainer.cache.get(obj);
+        return (Timer) metricContainer.metric;
     }
+
 
     public static SpanBuilder getSpanBuilder(Method method, Object obj, Class<?> clazz, String className, String methodName) {
-        return (SpanBuilder) metrics.computeIfAbsent(MetricKey.from("Trace", method, obj, clazz), (key) -> {
-            final kamon.annotation.api.Trace traceAnnotation = method.getAnnotation(kamon.annotation.api.Trace.class);
-            final String operationName = getOperationName(traceAnnotation.operationName(), obj, clazz, className, methodName);
-            final Map<String, Object> tags = getTags(obj, clazz, traceAnnotation.tags());
-            final SpanBuilder builder = Kamon.spanBuilder(operationName);
-            tags.forEach((k, v)-> builder.tag(k, v.toString()));
+        final MetricKey metricKey = MetricKey.from("Trace", method, clazz);
+        final kamon.annotation.api.Trace traceAnnotation = method.getAnnotation(kamon.annotation.api.Trace.class);
+        final String operationName = traceAnnotation.operationName();
+        final String traceTags = traceAnnotation.tags();
+        final boolean containsELExpression = isEL(operationName) || isEL(traceTags);
 
-            return builder;
+        final MetricContainer metricContainer = metrics.computeIfPresent(metricKey, (kk, container) -> {
+            if(containsELExpression) {
+                container.cache.computeIfAbsent(obj, (x) -> {
+                    final String name = getOperationName(operationName, obj, clazz, className, methodName);
+                    final Map<String, Object> tags = getTags(obj, clazz, traceTags);
+                    final SpanBuilder builder = Kamon.spanBuilder(name);
+                    tags.forEach((k, v)-> builder.tag(k, v.toString()));
+                    return builder;
+                });
+                return container;
+            }
+            container.metric = Kamon.spanBuilder(operationName);
+            return container;
         });
+
+        if(containsELExpression) return (SpanBuilder) metricContainer.cache.get(obj);
+        return (SpanBuilder) metricContainer.metric;
     }
+
+    private static Metric.Histogram getHistogram(kamon.annotation.api.Histogram histogramAnnotation, String name) {
+        return Kamon.histogram(name, MeasurementUnit.none(), new DynamicRange(histogramAnnotation.lowestDiscernibleValue(), histogramAnnotation.highestTrackableValue(), histogramAnnotation.precision()));
+    }
+
 
     private static  Map<String, Object> getTags(Object obj, Class<?> clazz, String tags) {
         final Map<String, String> tagMap = (obj != null) ? TagsEvaluator.eval(obj, tags) : TagsEvaluator.eval(clazz, tags);
@@ -133,21 +228,28 @@ public final class AnnotationCache {
         };
     }
 
+    private static boolean isEL(String str) {
+        return str.contains("#{") || str.contains("${");
+    }
+
+    private static class MetricContainer {
+        public Map<Object, Object> cache = new HashMap<>();
+        public Object metric;
+    }
+
     private static class MetricKey {
         private final String prefix;
         private final Method method;
-        private final Object instance;
         private final Class<?> clazz;
 
-        private  MetricKey(String prefix, Method method, Object instance, Class<?> clazz) {
+        private  MetricKey(String prefix, Method method, Class<?> clazz) {
             this.prefix = prefix;
             this.method = method;
-            this.instance = instance;
             this.clazz = clazz;
         }
 
-        public static MetricKey from(String prefix, Method method, Object instance, Class<?> clazz){
-            return new MetricKey(prefix, method, instance, clazz);
+        public static MetricKey from(String prefix, Method method, Class<?> clazz){
+            return new MetricKey(prefix, method, clazz);
         }
 
         @Override
@@ -157,13 +259,12 @@ public final class AnnotationCache {
             final MetricKey metricKey = (MetricKey) o;
             return Objects.equals(prefix, metricKey.prefix) &&
                    Objects.equals(method, metricKey.method) &&
-                   Objects.equals(instance, metricKey.instance) &&
                    Objects.equals(clazz, metricKey.clazz);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(prefix, method, instance, clazz);
+            return Objects.hash(prefix, method, clazz);
         }
     }
 }
