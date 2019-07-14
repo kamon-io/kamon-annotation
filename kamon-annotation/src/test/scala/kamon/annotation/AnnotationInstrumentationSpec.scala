@@ -16,14 +16,14 @@
 
 package kamon.annotation
 
-import kamon.{Kamon, testkit}
 import kamon.annotation.api._
-import kamon.metric.{Histogram => _, RangeSampler => _, Timer => _, _}
+import kamon.metric.{Histogram => _, RangeSampler => _, Timer => _}
 import kamon.module.Module.Registration
-import kamon.tag.TagSet
 import kamon.tag.Lookups._
-import kamon.testkit.{InstrumentInspection, MetricInspection, Reconfigure, SpanInspection, TestSpanReporter}
-import kamon.trace.{Hooks, Span}
+import kamon.tag.TagSet
+import kamon.testkit.{InstrumentInspection, MetricInspection, Reconfigure, SpanInspection}
+import kamon.trace.Span
+import kamon.{Kamon, testkit}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.SpanSugar
 import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpec}
