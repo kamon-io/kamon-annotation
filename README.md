@@ -1,9 +1,9 @@
-Annotation Module ![Build Status](https://travis-ci.org/kamon-io/kamon-annotation.svg?branch=master)
+Annotation Module ![Build Status](https://travis-ci.org/kamon-io/kamon-annotation.svg?branch=kanela)
 ==========================
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kamon-io/Kamon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-***kamon-annotation*** [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.kamon/kamon-play-25_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.kamon/kamon-annotation_2.11)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.kamon/kamon-annotation_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.kamon/kamon-annotation_2.12)
 
 The Annotation module provides a set of annotations that allow you to easily integrate Kamon's metrics and tracing
 facilities with your application.
