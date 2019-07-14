@@ -48,7 +48,7 @@ object EnhancedELProcessor {
         case Success(value) ⇒ value.asInstanceOf[java.util.HashMap[String, String]].asScala.toMap
         case Failure(cause) ⇒
           Logger.warn(new Supplier[String] {
-            override def get(): String =  s"${cause.getMessage} -> we will complete the operation with an empty cache"
+            override def get(): String =  s"${cause.getMessage} -> we will complete the operation with an empty map"
           }, cause)
           Map.empty[String, String]
       }
