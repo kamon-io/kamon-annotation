@@ -51,7 +51,7 @@ public final class AnnotationCache {
         final MetricKey metricKey = MetricKey.from("Gauge", method, clazz);
         final kamon.annotation.api.Gauge gaugeAnnotation = method.getAnnotation(kamon.annotation.api.Gauge.class);
 
-        final Gauge gauge = (Gauge) metrics.computeIfAbsent(metricKey, x -> Kamon.counter(gaugeAnnotation.name()).withoutTags());
+        final Gauge gauge = (Gauge) metrics.computeIfAbsent(metricKey, x -> Kamon.gauge(gaugeAnnotation.name()).withoutTags());
 
         if(containsELExpression(gaugeAnnotation.name(), gaugeAnnotation.tags())) {
             return (Gauge) metrics.computeIfPresent(metricKey, (key, c) -> key.cache.computeIfAbsent(obj, (x) -> {
